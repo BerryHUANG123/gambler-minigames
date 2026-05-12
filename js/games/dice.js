@@ -1,172 +1,146 @@
-// ========== 掷骰子 — 皮克松赌场 ==========
+// ========== 掷骰子 ==========
 
-let diceState = {
-  balance: 1000,
-  currentBet: 0,
-  result: null,
-  rolling: false,
-};
+(function() {
+  let state = { bet: 0, choice: null, rolling: false };
 
-const DICE_FACES = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
-
-function initDice() {
-  diceState = { balance: 1000, currentBet: 0, result: null, rolling: false };
-  renderDiceGame();
-}
-
-function renderDiceGame() {
-  document.getElementById('gameGrid')?.remove();
-
-  const container = document.getElementById('root') || document.body;
-  const existing = document.getElementById('dice-game');
-  if (existing) existing.remove();
-
-  const div = document.createElement('div');
-  div.id = 'dice-game';
-  div.innerHTML = `
-    <div class="game-container">
-      <div class="game-header">
-        <button class="back-btn" onclick="backToHall()">← 大厅</button>
-        <h2>🎲 掷骰子</h2>
-      </div>
-
-      <div class="balance">筹码余额：<span id="diceBalance">${diceState.balance}</span></div>
-
-      <div class="game-table">
-        <div class="dice-container">
-          <div class="dice" id="dice1">⚀</div>
-          <div class="dice" id="dice2">⚀</div>
-        </div>
-
-        <div id="diceTotal" class="message message-info">点击下注开始</div>
-
-        <div id="diceResult" class="message"></div>
-      </div>
-
-      <div class="bet-options">
-        <button class="bet-btn" data-bet="big" onclick="selectDiceBet('big')">大 (7-12)</button>
-        <button class="bet-btn" data-bet="small" onclick="selectDiceBet('small')">小 (2-6)</button>
-      </div>
-
-      <div class="chips">
-        <div class="chip chip-100" data-amount="100" onclick="addDiceBet(100)">100</div>
-        <div class="chip chip-500" data-amount="500" onclick="addDiceBet(500)">500</div>
-        <div class="chip chip-1000" data-amount="1000" onclick="addDiceBet(1000)">1000</div>
-      </div>
-
-      <div style="text-align:center; margin:10px 0; color:#888; font-size:0.9rem;">
-        当前下注：<span id="diceCurrentBet" style="color:var(--gold);font-weight:bold;">0</span>
-      </div>
-
-      <div style="text-align:center;">
-        <button class="btn btn-primary" id="diceRollBtn" onclick="rollDice()">掷骰子！</button>
-      </div>
+  // 注册页面
+  const html = `
+  <div class="game-page" id="page-dice">
+    <div class="game-top">
+      <button class="back-btn" onclick="Engine.backToHall()">← 大厅</button>
+      <h2>🎲 掷骰子</h2>
     </div>
-  `;
+    <div class="top-bar">
+      <div class="balance-display">💰 <span class="balance-val">0</span></div>
+    </div>
+    <div class="game-table">
+      <div class="dice-area">
+        <div class="die" id="d1">⚀</div>
+        <div class="die" id="d2">⚁</div>
+      </div>
+      <div id="diceTotal" class="message msg-info">押大还是押小？</div>
+      <div id="diceResult" class="message"></div>
+    </div>
+    <div class="bet-options">
+      <button class="bet-btn" data-choice="big" onclick="Dice.select('big')">大 (7-12)</button>
+      <button class="bet-btn" data-choice="small" onclick="Dice.select('small')">小 (2-6)</button>
+      <button class="bet-btn" data-choice="triple" onclick="Dice.select('triple')">围骰 (1:10)</button>
+    </div>
+    <div class="chips">
+      <div class="chip chip-100" onclick="Dice.bet(100)">100</div>
+      <div class="chip chip-500" onclick="Dice.bet(500)">500</div>
+      <div class="chip chip-1000" onclick="Dice.bet(1000)">1000</div>
+    </div>
+    <div class="current-bet">下注：<span id="diceBet">0</span></div>
+    <div class="game-controls">
+      <button class="btn btn-primary" id="diceRollBtn" onclick="Dice.roll()">掷骰子！</button>
+    </div>
+  </div>`;
 
-  container.prepend(div);
-  document.title = '🎲 掷骰子 — 皮克松赌场';
-}
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('gamePages').insertAdjacentHTML('beforeend', html);
+  });
 
-function selectDiceBet(type) {
-  document.querySelectorAll('.bet-btn').forEach(b => b.classList.remove('selected'));
-  if (type === 'big') {
-    document.querySelector('[data-bet="big"]').classList.add('selected');
-    document.getElementById('diceResult').textContent = '';
-    document.getElementById('diceTotal').textContent = '选好了，下注吧！';
-  } else {
-    document.querySelector('[data-bet="small"]').classList.add('selected');
-    document.getElementById('diceResult').textContent = '';
-    document.getElementById('diceTotal').textContent = '选好了，下注吧！';
-  }
-}
+  window.Dice = {
+    select(choice) {
+      state.choice = choice;
+      document.querySelectorAll('#page-dice .bet-btn').forEach(b => b.classList.remove('selected'));
+      document.querySelector(`#page-dice [data-choice="${choice}"]`).classList.add('selected');
+      document.getElementById('diceResult').textContent = '';
+      Engine.play('click');
+    },
 
-function addDiceBet(amount) {
-  if (amount > diceState.balance) {
-    document.getElementById('diceResult').textContent = '筹码不够，穷鬼别来！';
-    document.getElementById('diceResult').className = 'message message-lose';
-    return;
-  }
-  diceState.currentBet += amount;
-  diceState.balance -= amount;
-  updateDiceUI();
-}
+    bet(amount) {
+      if (!Engine.canBet(amount)) {
+        document.getElementById('diceResult').textContent = '筹码不够，穷鬼别来！';
+        document.getElementById('diceResult').className = 'message msg-lose';
+        return;
+      }
+      state.bet += amount;
+      Engine.state.balance -= amount;
+      Engine.save();
+      Engine.updateBalanceUI();
+      document.getElementById('diceBet').textContent = state.bet;
+      Engine.play('click');
+    },
 
-function updateDiceUI() {
-  document.getElementById('diceBalance').textContent = diceState.balance;
-  document.getElementById('diceCurrentBet').textContent = diceState.currentBet;
-}
-
-function rollDice() {
-  if (diceState.rolling) return;
-
-  const selected = document.querySelector('.bet-btn.selected');
-  if (!selected) {
-    document.getElementById('diceResult').textContent = '选大小啊！押大还是押小？';
-    document.getElementById('diceResult').className = 'message message-info';
-    return;
-  }
-  if (diceState.currentBet <= 0) {
-    document.getElementById('diceResult').textContent = '没钱下注？想空手套白狼？';
-    document.getElementById('diceResult').className = 'message message-info';
-    return;
-  }
-
-  diceState.rolling = true;
-  document.getElementById('diceRollBtn').disabled = true;
-
-  const dice1 = document.getElementById('dice1');
-  const dice2 = document.getElementById('dice2');
-  dice1.classList.add('rolling');
-  dice2.classList.add('rolling');
-
-  let count = 0;
-  const interval = setInterval(() => {
-    dice1.textContent = DICE_FACES[Math.floor(Math.random() * 6)];
-    dice2.textContent = DICE_FACES[Math.floor(Math.random() * 6)];
-    count++;
-    if (count >= 8) {
-      clearInterval(interval);
-
-      const v1 = Math.floor(Math.random() * 6);
-      const v2 = Math.floor(Math.random() * 6);
-      dice1.textContent = DICE_FACES[v1];
-      dice2.textContent = DICE_FACES[v2];
-      dice1.classList.remove('rolling');
-      dice2.classList.remove('rolling');
-
-      const total = (v1 + 1) + (v2 + 1);
-      const betType = document.querySelector('.bet-btn.selected').dataset.bet;
-      const isBig = total >= 7;
-      const isWin = (betType === 'big' && isBig) || (betType === 'small' && !isBig);
-
-      document.getElementById('diceTotal').textContent = `点数：${total}`;
-
-      const resultEl = document.getElementById('diceResult');
-      if (total === 7) {
-        // 7点庄家通吃
-        resultEl.textContent = '7点！庄家通吃！';
-        resultEl.className = 'message message-lose';
-      } else if (isWin) {
-        const winAmount = diceState.currentBet * 2;
-        diceState.balance += winAmount;
-        resultEl.textContent = `${betType === 'big' ? '大' : '小'}！中了！赢 ${winAmount}！`;
-        resultEl.className = 'message message-win';
-      } else {
-        resultEl.textContent = `${betType === 'big' ? '大' : '小'}没中，继续？`;
-        resultEl.className = 'message message-lose';
+    roll() {
+      if (state.rolling || state.bet <= 0 || !state.choice) {
+        if (!state.choice) document.getElementById('diceResult').textContent = '先选大小！';
+        else if (state.bet <= 0) document.getElementById('diceResult').textContent = '先下注！';
+        return;
       }
 
-      diceState.currentBet = 0;
-      diceState.rolling = false;
-      document.getElementById('diceRollBtn').disabled = false;
-      diceState.balance <= 0 && (resultEl.textContent += ' 输光了，去借高利贷吧！');
-      updateDiceUI();
-    }
-  }, 80);
-}
+      state.rolling = true;
+      document.getElementById('diceRollBtn').disabled = true;
+      Engine.play('spin');
 
-function backToHall() {
-  document.getElementById('dice-game')?.remove();
-  location.reload();
-}
+      const d1 = document.getElementById('d1');
+      const d2 = document.getElementById('d2');
+      const faces = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+      d1.classList.add('rolling');
+      d2.classList.add('rolling');
+
+      let count = 0;
+      const iv = setInterval(() => {
+        d1.textContent = faces[Engine.randomInt(0,5)];
+        d2.textContent = faces[Engine.randomInt(0,5)];
+        if (++count >= 10) {
+          clearInterval(iv);
+          const v1 = Engine.randomInt(1,6);
+          const v2 = Engine.randomInt(1,6);
+          d1.textContent = faces[v1-1];
+          d2.textContent = faces[v2-1];
+          d1.classList.remove('rolling');
+          d2.classList.remove('rolling');
+
+          const total = v1 + v2;
+          const isTriple = v1 === v2;
+          document.getElementById('diceTotal').textContent = `点数：${v1} + ${v2} = ${total}`;
+          
+          let won = false;
+          let multiplier = 1;
+          const choice = state.choice;
+
+          if (choice === 'triple' && isTriple) {
+            won = true;
+            multiplier = 10;
+          } else if (choice === 'big' && total >= 8 && !isTriple) {
+            won = true;
+            multiplier = 2;
+          } else if (choice === 'small' && total <= 6 && !isTriple) {
+            won = true;
+            multiplier = 2;
+          }
+
+          const result = document.getElementById('diceResult');
+          if (won) {
+            const win = state.bet * multiplier;
+            Engine.addBalance(win);
+            result.textContent = `中了！赢 ${win} 筹码！`;
+            result.className = 'message msg-win';
+            Engine.play('win');
+            Engine.showQuote('win');
+          } else {
+            result.textContent = isTriple && choice !== 'triple' ? '围骰！通杀！' : '没中，继续！';
+            result.className = 'message msg-lose';
+            Engine.play('lose');
+          }
+
+          if (Engine.state.balance <= 0) {
+            result.textContent += ' 💸 输光了，去借高利贷吧！';
+            Engine.showQuote('taunt');
+          }
+
+          state.bet = 0;
+          state.choice = null;
+          state.rolling = false;
+          document.getElementById('diceRollBtn').disabled = false;
+          document.getElementById('diceBet').textContent = '0';
+          document.querySelectorAll('#page-dice .bet-btn').forEach(b => b.classList.remove('selected'));
+          Engine.updateBalanceUI();
+        }
+      }, 70);
+    }
+  };
+})();
