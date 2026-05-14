@@ -2,9 +2,41 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>皮克松赌场 — 小游戏合集</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>皮克松赌场 — 100个小游戏合集</title>
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* 分类导航 */
+    .cat-nav {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      justify-content: center; padding: 6px 0; width: 100%;
+    }
+    .cat-btn {
+      padding: 4px 12px; border: 1px solid #444; border-radius: 16px;
+      background: transparent; color: #aaa; cursor: pointer;
+      font-family: inherit; font-size: 0.75rem; transition: 0.2s;
+      white-space: nowrap;
+    }
+    .cat-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .cat-active { background: rgba(212,175,55,0.15); border-color: var(--gold); color: var(--gold); }
+    /* 游戏计数 */
+    .game-count { font-size: 0.75rem; color: #666; text-align: center; margin: 4px 0; }
+
+    /* 大厅响应式调整 */
+    .hall { max-width: 900px; }
+    .games-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+    .game-card { padding: 14px 10px; }
+    .game-card .icon { font-size: 1.8rem; margin-bottom: 6px; }
+    .game-card .name { font-size: 0.85rem; }
+    .game-card .desc { font-size: 0.65rem; }
+
+    @media (max-width: 480px) {
+      .header h1 { font-size: 1.5rem; }
+      .games-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+      .game-card { padding: 10px 6px; }
+      .cat-btn { font-size: 0.65rem; padding: 3px 8px; }
+    }
+  </style>
 </head>
 <body>
 
@@ -14,7 +46,7 @@
   <div class="hall active" id="hall">
     <header class="header">
       <h1>🃏 皮克松赌场</h1>
-      <p class="subtitle">PI KE SONG · CASINO</p>
+      <p class="subtitle">PI KE SONG · CASINO · 100 GAMES</p>
       <hr class="divider">
       <p class="tagline">"给我擦皮鞋，小瘪三！"</p>
     </header>
@@ -22,6 +54,10 @@
       <div class="balance-display">💰 筹码：<span class="balance-val">0</span></div>
       <button class="sound-toggle" onclick="Engine.play('click')">🔊 音效</button>
     </div>
+    <!-- 分类导航 -->
+    <div class="cat-nav" id="categoryNav"></div>
+    <div class="game-count" id="gameCount"></div>
+    <!-- 游戏网格 -->
     <div class="games-grid" id="gameGrid"></div>
     <div class="footer-sig">这碗饭是您赏的，我皮克松心里有数。</div>
   </div>
@@ -29,19 +65,13 @@
   <!-- 游戏页面容器（由JS动态生成） -->
   <div id="gamePages"></div>
 
+  <!-- 核心引擎 -->
   <script src="js/engine.js"></script>
-  <script src="js/games/dice.js"></script>
-  <script src="js/games/blackjack.js"></script>
-  <script src="js/games/cardcheck.js"></script>
-  <script src="js/games/slot.js"></script>
-  <script src="js/games/hilo.js"></script>
-  <script src="js/games/roulette.js"></script>
-  <script src="js/games/war.js"></script>
-  <script src="js/games/russian.js"></script>
-  <script src="js/games/coinflip.js"></script>
-  <script src="js/games/scratch.js"></script>
-  <script src="js/games/bomb.js"></script>
-  <script src="js/games/luckywheel.js"></script>
-  <script src="js/games/rps.js"></script>
+  <!-- 游戏工厂（模板生成器） -->
+  <script src="js/game-factory.js"></script>
+  <!-- 100个游戏配置 -->
+  <script src="js/config/games.js"></script>
+  <!-- 大厅主逻辑 -->
+  <script src="js/main.js"></script>
 </body>
 </html>

@@ -1,143 +1,161 @@
-// ========== 验牌 🃏— 皮克松招牌游戏 ==========
-
 (function() {
+  // Card Check Game
+  const SUITS = ['♠', '♥', '♣', '♦'];
+  const VALUES = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+
   let state = {
+    balance: 1000,
     bet: 0,
     cards: [],
-    riggedIndex: -1,
-    revealed: false,
-    stage: 'bet', // bet | pick | result
+    revealed: [],
+    solved: false
   };
 
-  const FACES = ['A','K','Q','J'];
-
-  function createCards() {
-    // 3 cards, one is "rigged" (has a different back or is marked)
-    const idx = Engine.randomInt(0, 2);
-    const cards = [];
-    for (let i = 0; i < 3; i++) {
-      const face = FACES[Math.floor(Math.random() * FACES.length)];
-      cards.push({ face, suit: i === idx ? '★' : (['♠','♥','♦','♣'][i]), isRigged: i === idx });
-    }
-    return { cards, riggedIndex: idx };
-  }
-
-  const html = `
-  <div class="game-page" id="page-cardcheck">
+  const html = `<div class="game-page" id="page-cardcheck">
     <div class="game-top">
-      <button class="back-btn" onclick="CC.back()">← 大厅</button>
+      <button class="back-btn" onclick="Engine.backToHall()">← 大厅</button>
       <h2>🃏 验牌</h2>
     </div>
     <div class="top-bar">
       <div class="balance-display">💰 <span class="balance-val">0</span></div>
     </div>
-    <div id="ccPrompt" style="text-align:center;padding:6px;color:#aaa;font-size:0.85rem;">
-      三张牌里有一张被动了手脚，把它找出来！
-    </div>
     <div class="game-table">
-      <div class="hand" id="ccHand">
-        <div class="card card-back" data-idx="0" onclick="CC.pick(0)" style="cursor:pointer;"></div>
-        <div class="card card-back" data-idx="1" onclick="CC.pick(1)" style="cursor:pointer;"></div>
-        <div class="card card-back" data-idx="2" onclick="CC.pick(2)" style="cursor:pointer;"></div>
-      </div>
-      <div id="ccResult" class="message">哪张是老千牌？</div>
+      <div id="cardsContainer" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:20px 0;"></div>
+      <div id="cardcheckMessage" class="message"></div>
+    </div>
+    <div class="bet-options">
+      <button class="bet-btn" data-choice="all" onclick="CardCheck.select('all')">全对 x2</button>
+      <button class="bet-btn" data-choice="one" onclick="CardCheck.select('one')">猜对一张 x1</button>
     </div>
     <div class="chips">
-      <div class="chip chip-100" onclick="CC.bet(100)">100</div>
-      <div class="chip chip-500" onclick="CC.bet(500)">500</div>
-      <div class="chip chip-1000" onclick="CC.bet(1000)">1000</div>
+      <div class="chip chip-100" onclick="CardCheck.bet(100)">100</div>
+      <div class="chip chip-500" onclick="CardCheck.bet(500)">500</div>
+      <div class="chip chip-1000" onclick="CardCheck.bet(1000)">1000</div>
     </div>
-    <div class="current-bet">下注：<span id="ccBet">0</span></div>
+    <div class="current-bet">下注：<span id="cardcheckBet">0</span></div>
     <div class="game-controls">
-      <button class="btn" id="ccNewBtn" onclick="CC.newGame()">新一局</button>
+      <button class="btn btn-primary" id="cardcheckStartBtn" onclick="CardCheck.start()">🃏 开始验牌</button>
     </div>
   </div>`;
 
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('gamePages').insertAdjacentHTML('beforeend', html);
-  });
-
-  function renderCard(card, idx, revealed) {
-    if (!revealed) {
-      return `<div class="card card-back" data-idx="${idx}" onclick="CC.pick(${idx})" style="cursor:pointer;"></div>`;
-    }
-    if (card.isRigged) {
-      return `<div class="card" style="background:#f5e6c8;color:#c0392b;border:3px solid #c0392b;">
-        <span class="card-value">${card.face}</span><span class="card-suit">${card.suit}</span>
-      </div>`;
-    }
-    const cls = (card.suit === '♥' || card.suit === '♦') ? 'card-red' : 'card-black';
-    return `<div class="card ${cls}"><span class="card-value">${card.face}</span><span class="card-suit">${card.suit}</span></div>`;
+  function init() {
+    Engine.registerPage('cardcheck', html, CardCheck.init);
+    CardCheck.updateUI();
   }
 
-  window.CC = {
-    back() { Engine.backToHall(); },
+  function select(choice) {
+    state.choice = choice;
+    document.querySelectorAll('#page-cardcheck .bet-btn').forEach(b => b.classList.remove('selected'));
+    document.querySelector(`#page-cardcheck [data-choice="${choice}"]`).classList.add('selected');
+    Engine.play('click');
+  }
 
-    bet(amount) {
-      if (state.stage !== 'bet') return;
-      if (!Engine.canBet(amount)) return;
-      state.bet += amount;
-      Engine.state.balance -= amount;
-      Engine.save();
-      Engine.updateBalanceUI();
-      document.getElementById('ccBet').textContent = state.bet;
-      Engine.play('click');
-    },
+  function bet(amount) {
+    if (state.balance < amount) {
+      Engine.showQuote('error', '余额不足！');
+      return;
+    }
+    state.bet = amount;
+    state.choice = null;
+    state.cards = [];
+    state.revealed = [];
+    state.solved = false;
+    document.querySelectorAll('#page-cardcheck .bet-btn').forEach(b => b.classList.remove('selected'));
+    document.getElementById('cardcheckMessage').textContent = '';
+    CardCheck.updateUI();
+    Engine.play('click');
+  }
 
-    newGame() {
-      const result = createCards();
-      state.cards = result.cards;
-      state.riggedIndex = result.riggedIndex;
-      state.revealed = false;
-      state.stage = 'bet';
-      state.bet = 0;
-      document.getElementById('ccBet').textContent = '0';
-      document.getElementById('ccResult').textContent = '哪张是老千牌？';
-      document.getElementById('ccResult').className = 'message msg-info';
-      document.getElementById('ccPrompt').textContent = '三张牌里有一张被动了手脚，把它找出来！';
-      document.getElementById('ccHand').innerHTML =
-        state.cards.map((_, i) =>
-          `<div class="card card-back" data-idx="${i}" onclick="CC.pick(${i})" style="cursor:pointer;"></div>`
-        ).join('');
-      Engine.updateBalanceUI();
-    },
+  function start() {
+    if (!state.choice || state.bet === 0) {
+      Engine.showQuote('error', '请先下注并选择玩法！');
+      return;
+    }
 
-    pick(idx) {
-      if (state.stage === 'result') return;
-      if (state.bet <= 0) {
-        document.getElementById('ccResult').textContent = '先下注再验牌！';
-        document.getElementById('ccResult').className = 'message msg-info';
-        return;
+    // Generate 4 cards (2 pairs)
+    const used = new Set();
+    state.cards = [];
+    for (let i = 0; i < 4; i++) {
+      let val;
+      do {
+        val = Engine.randomInt(0, 12);
+      } while (used.has(val) && used.size < 13);
+      used.add(val);
+
+      const suit = SUITS[Engine.randomInt(0, 3)];
+      state.cards.push({ value: val, suit, id: i });
+    }
+
+    state.revealed = [false, false, false, false];
+    state.solved = false;
+    CardCheck.renderCards();
+    document.getElementById('cardcheckMessage').textContent = '点击卡片，找出所有相同的牌对！';
+    Engine.play('click');
+  }
+
+  function clickCard(index) {
+    if (state.revealed[index] || state.solved) return;
+
+    state.revealed[index] = true;
+    CardCheck.renderCards();
+
+    // Check if we've revealed all matching pairs
+    const revealedCards = state.cards.filter((c, i) => state.revealed[i]);
+    const valueCounts = {};
+    revealedCards.forEach(c => {
+      valueCounts[c.value] = (valueCounts[c.value] || 0) + 1;
+    });
+
+    const pairsFound = Object.values(valueCounts).filter(count => count === 2).length;
+    const totalPairs = 2;
+
+    if (pairsFound === totalPairs) {
+      state.solved = true;
+      const total = state.bet * 2;
+      state.balance += total;
+      Engine.showQuote('win', `🎉 全对！赢 ${total} 筹码！`);
+      Engine.play('win');
+      document.getElementById('cardcheckMessage').textContent = `🎉 全对！所有牌对都已找到！`;
+    }
+
+    Engine.play('click');
+  }
+
+  function renderCards() {
+    const container = document.getElementById('cardsContainer');
+    container.innerHTML = '';
+
+    state.cards.forEach((card, index) => {
+      const el = document.createElement('div');
+      el.className = 'card ' + (state.revealed[index] ? 'card-revealed' : 'card-back');
+      el.style.cursor = state.revealed[index] ? 'pointer' : 'default';
+      el.onclick = () => CardCheck.clickCard(index);
+
+      if (state.revealed[index]) {
+        const v = card.value === 0 ? 'A' : card.value === 10 ? '10' : card.value === 11 ? 'J' : card.value === 12 ? 'Q' : card.value === 13 ? 'K' : card.value + 1;
+        const clr = (card.suit === '♥' || card.suit === '♦') ? 'card-red' : 'card-black';
+        el.innerHTML = `<span class="card-value">${v}</span><span class="card-suit">${card.suit}</span>`;
+        el.className = 'card ' + clr;
       }
-      if (!state.cards.length) {
-        state.cards = createCards().cards;
-        state.riggedIndex = createCards().riggedIndex;
-      }
 
-      state.stage = 'result';
-      state.revealed = true;
-      const isCorrect = state.cards[idx].isRigged;
+      container.appendChild(el);
+    });
+  }
 
-      // Reveal all
-      document.getElementById('ccHand').innerHTML =
-        state.cards.map((c, i) => renderCard(c, i, true)).join('');
+  function updateUI() {
+    document.querySelectorAll('#page-cardcheck .balance-val').forEach(el => el.textContent = state.balance);
+    document.getElementById('cardcheckBet').textContent = state.bet;
+  }
 
-      const result = document.getElementById('ccResult');
-      if (isCorrect) {
-        const win = state.bet * 3;
-        Engine.addBalance(win);
-        result.textContent = `好眼力！老千牌被你找到了！赢 ${win} 筹码！牌没有问题！`;
-        result.className = 'message msg-win';
-        Engine.play('win');
-        Engine.showQuote('win');
-      } else {
-        result.textContent = `看走眼了！这张是干净的，老千是第 ${state.riggedIndex + 1} 张。输 ${state.bet}`;
-        result.className = 'message msg-lose';
-        Engine.play('lose');
-        Engine.showQuote('lose');
-      }
-
-      Engine.updateBalanceUI();
-    },
+  const CardCheck = {
+    select,
+    bet,
+    start,
+    clickCard,
+    renderCards,
+    updateUI,
+    init
   };
+
+  init();
 })();

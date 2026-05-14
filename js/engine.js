@@ -7,9 +7,14 @@ const Engine = {
     totalWon: 0,
   },
 
+  // 游戏注册表
+  _registry: [],
+  _registryMap: {},
+  _loaded: new Set(),
+
+  // ---- 初始化 ----
   init() {
     this.load();
-    this.renderHall();
     this.initSound();
   },
 
@@ -46,17 +51,76 @@ const Engine = {
     });
   },
 
+  // ---- 游戏注册系统 ----
+  registerGame(config) {
+    if (this._registryMap[config.id]) return; // 不重复注册
+    this._registry.push(config);
+    this._registryMap[config.id] = config;
+  },
+
+  getGames(category) {
+    if (!category || category === 'all') return this._registry;
+    return this._registry.filter(g => g.category === category);
+  },
+
+  getGame(id) {
+    return this._registryMap[id] || null;
+  },
+
+  getCategories() {
+    const cats = {};
+    this._registry.forEach(g => {
+      if (!cats[g.category]) cats[g.category] = { id: g.category, name: g.catName, icon: g.catIcon, count: 0 };
+      cats[g.category].count++;
+    });
+    return Object.values(cats);
+  },
+
+  // ---- 游戏懒加载 ----
+  loadGame(id) {
+    const config = this._registryMap[id];
+    if (!config) return;
+
+    // 如果是模板游戏（不需要独立文件）
+    if (config.template) {
+      this._loaded.add(id);
+      this.showGame(id);
+      return;
+    }
+
+    if (this._loaded.has(id)) {
+      this.showGame(id);
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = `js/games/${id}.js`;
+    script.onload = () => {
+      this._loaded.add(id);
+      this.showGame(id);
+    };
+    script.onerror = () => {
+      this._loaded.add(id);
+      this.showGame(id);
+    };
+    document.body.appendChild(script);
+  },
+
   // ---- 导航 ----
   showGame(gameId) {
     document.querySelectorAll('.game-page').forEach(p => p.classList.remove('active'));
     document.querySelector('.hall')?.classList.remove('active');
     const page = document.getElementById(`page-${gameId}`);
-    if (page) page.classList.add('active');
+    if (page) {
+      page.classList.add('active');
+      this.updateBalanceUI();
+    }
   },
 
   backToHall() {
     document.querySelectorAll('.game-page').forEach(p => p.classList.remove('active'));
     document.querySelector('.hall')?.classList.add('active');
+    this.updateBalanceUI();
   },
 
   // ---- 音效 ----
@@ -114,6 +178,14 @@ const Engine = {
           gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
           osc.start(ctx.currentTime);
           osc.stop(ctx.currentTime + 0.1);
+          break;
+        case 'reveal':
+          osc.frequency.setValueAtTime(400, ctx.currentTime);
+          osc.frequency.setValueAtTime(600, ctx.currentTime + 0.08);
+          osc.frequency.setValueAtTime(800, ctx.currentTime + 0.16);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+          osc.start(ctx.currentTime);
+          osc.stop(ctx.currentTime + 0.3);
           break;
       }
     } catch(e) { /* ignore */ }
@@ -176,35 +248,52 @@ const Engine = {
   },
 
   // ---- 渲染大厅 ----
-  renderHall() {
-    const games = [
-      { id: 'dice', icon: '🎲', name: '掷骰子', desc: '压大压小，买定离手！三秒见输赢。' },
-      { id: 'blackjack', icon: '♠️', name: '21点', desc: '经典 Blackjack，跟庄家对赌。' },
-      { id: 'cardcheck', icon: '🃏', name: '验牌', desc: '三张牌里找出老千，皮克松的绝活。' },
-      { id: 'slot', icon: '🎰', name: '老虎机', desc: '777！三列转盘，一拉暴富。' },
-      { id: 'hilo', icon: '🀄', name: '猜大小', desc: '三颗骰子，猜点数范围。' },
-      { id: 'roulette', icon: '🎡', name: '轮盘', desc: '转盘一响，黄金万两。' },
-      { id: 'war', icon: '⚔️', name: '比点数', desc: '简单粗暴，翻牌比大小。' },
-      { id: 'russian', icon: '💀', name: '俄罗斯轮盘', desc: '纯赌命，高风险高回报。' },
-      { id: 'coinflip', icon: '🎪', name: '猜硬币', desc: '正面反面？50%胜率，简单刺激。' },
-      { id: 'scratch', icon: '💳', name: '刮刮乐', desc: '三张刮刮卡，看谁中大奖！' },
-      { id: 'bomb', icon: '💣', name: '拆弹', desc: '三个按钮，一个会炸！' },
-      { id: 'luckywheel', icon: '🍀', name: '幸运转盘', desc: '转一转，大奖等你拿！' },
-      { id: 'rps', icon: '✂️', name: '猜拳', desc: '石头剪刀布，三局两胜！' },
-    ];
-
+  renderHall(category) {
     const grid = document.getElementById('gameGrid');
     if (!grid) return;
-    grid.innerHTML = games.map(g => `
-      <div class="game-card" onclick="Engine.showGame('${g.id}')">
+
+    const games = this.getGames(category);
+    const page = this._page || 0;
+    const perPage = 24;
+    const totalPages = Math.ceil(games.length / perPage);
+    const start = page * perPage;
+    const pageGames = games.slice(start, start + perPage);
+
+    grid.innerHTML = pageGames.map(g => `
+      <div class="game-card" data-game="${g.id}" onclick="Engine.loadGame('${g.id}')">
         <div class="icon">${g.icon}</div>
         <div class="name">${g.name}</div>
         <div class="desc">${g.desc}</div>
         <span class="badge badge-ready">▶ 开玩</span>
       </div>
-    `).join('');
+    `).join('') + this._renderPagination(totalPages, page);
 
+    this._currentCategory = category;
     this.updateBalanceUI();
+  },
+
+  _renderPagination(totalPages, page) {
+    if (totalPages <= 1) return '';
+    let html = '<div class="pagination" style="grid-column:1/-1;display:flex;justify-content:center;gap:8px;margin-top:12px;">';
+    for (let i = 0; i < totalPages; i++) {
+      html += `<button class="btn btn-sm ${i === page ? 'btn-primary' : ''}" onclick="Engine.goPage(${i})" style="min-width:36px;">${i + 1}</button>`;
+    }
+    html += '</div>';
+    return html;
+  },
+
+  _page: 0,
+  _currentCategory: 'all',
+
+  goPage(p) {
+    this._page = p;
+    this.renderHall(this._currentCategory);
+  },
+
+  switchCategory(cat) {
+    this._page = 0;
+    this._currentCategory = cat;
+    this.renderHall(cat);
   },
 };
 

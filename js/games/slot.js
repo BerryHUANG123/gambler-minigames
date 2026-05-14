@@ -1,23 +1,15 @@
-// ========== 老虎机 🎰 ==========
-
 (function() {
-  let state = { bet: 0, spinning: false };
+  // Slot Machine Game
+  const SYMBOLS = ['🍒', '🍋', '🍊', '🍇', '💎', '7️⃣'];
+  const SYMBOLS_CHINESE = ['樱桃', '柠檬', '橙子', '葡萄', '钻石', '7'];
 
-  const SYMBOLS = ['🍒','🍋','🍊','🍇','🔔','💎','7️⃣','⭐','💰'];
-  const PAYOUTS = {
-    '💰💰💰': 50, '7️⃣7️⃣7️⃣': 30, '💎💎💎': 20,
-    '⭐⭐⭐': 15, '🔔🔔🔔': 12,
-    '🍇🍇🍇': 8, '🍊🍊🍊': 6, '🍋🍋🍋': 5, '🍒🍒🍒': 4,
-    '💰💰': 5, '7️⃣7️⃣': 4,
+  let state = {
+    balance: 1000,
+    bet: 0,
+    spinning: false
   };
 
-  function checkWin(reels) {
-    const line = reels.join('');
-    return PAYOUTS[line] || 0;
-  }
-
-  const html = `
-  <div class="game-page" id="page-slot">
+  const html = `<div class="game-page" id="page-slot">
     <div class="game-top">
       <button class="back-btn" onclick="Engine.backToHall()">← 大厅</button>
       <h2>🎰 老虎机</h2>
@@ -26,13 +18,12 @@
       <div class="balance-display">💰 <span class="balance-val">0</span></div>
     </div>
     <div class="game-table">
-      <div class="reels">
-        <div class="reel" id="slot1">🍒</div>
-        <div class="reel" id="slot2">🍋</div>
-        <div class="reel" id="slot3">🍇</div>
+      <div class="reels-container">
+        <div class="reel" id="reel1">🍒</div>
+        <div class="reel" id="reel2">🍒</div>
+        <div class="reel" id="reel3">🍒</div>
       </div>
-      <div id="slotResult" class="message">拉杆试试手气！</div>
-      <div id="slotPayout" style="font-size:0.8rem;color:#888;"></div>
+      <div id="slotMessage" class="message"></div>
     </div>
     <div class="chips">
       <div class="chip chip-100" onclick="Slot.bet(100)">100</div>
@@ -41,76 +32,118 @@
     </div>
     <div class="current-bet">下注：<span id="slotBet">0</span></div>
     <div class="game-controls">
-      <button class="btn btn-primary" id="slotSpinBtn" onclick="Slot.spin()">🎰 拉杆！</button>
+      <button class="btn btn-primary" id="slotSpinBtn" onclick="Slot.spin()">🎰 旋转</button>
     </div>
   </div>`;
 
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('gamePages').insertAdjacentHTML('beforeend', html);
-    document.getElementById('slotPayout').textContent =
-      '💰💰💰 x50 | 7️⃣7️⃣7️⃣ x30 | 💎💎💎 x20 | ⭐⭐⭐ x15 | 🍇🍇🍇 x8';
-  });
+  function init() {
+    Engine.registerPage('slot', html, Slot.init);
+    Slot.updateUI();
+  }
 
-  window.Slot = {
-    bet(amount) {
-      if (!Engine.canBet(amount)) return;
-      state.bet += amount;
-      Engine.state.balance -= amount;
-      Engine.save();
-      Engine.updateBalanceUI();
-      document.getElementById('slotBet').textContent = state.bet;
-      Engine.play('click');
-    },
-
-    spin() {
-      if (state.spinning || state.bet <= 0) return;
-      state.spinning = true;
-      document.getElementById('slotSpinBtn').disabled = true;
-      document.getElementById('slotResult').textContent = '';
-      Engine.play('spin');
-
-      const r1 = document.getElementById('slot1');
-      const r2 = document.getElementById('slot2');
-      const r3 = document.getElementById('slot3');
-      const reels = [r1, r2, r3];
-
-      reels.forEach(r => r.classList.add('spinning'));
-
-      let count = 0;
-      const iv = setInterval(() => {
-        reels.forEach(r => { r.textContent = SYMBOLS[Engine.randomInt(0, SYMBOLS.length-1)]; });
-        if (++count >= 15) {
-          clearInterval(iv);
-          const result = [
-            SYMBOLS[Engine.randomInt(0, SYMBOLS.length-1)],
-            SYMBOLS[Engine.randomInt(0, SYMBOLS.length-1)],
-            SYMBOLS[Engine.randomInt(0, SYMBOLS.length-1)],
-          ];
-          reels.forEach((r, i) => { r.textContent = result[i]; r.classList.remove('spinning'); });
-
-          const multiplier = checkWin(result);
-          const resEl = document.getElementById('slotResult');
-          if (multiplier > 0) {
-            const win = state.bet * multiplier;
-            Engine.addBalance(win);
-            resEl.textContent = `🎉 ${result.join('')} 中了！赢 ${win} 筹码！`;
-            resEl.className = 'message msg-win';
-            Engine.play('win');
-            if (multiplier >= 20) Engine.showQuote('jackpot');
-            else Engine.showQuote('win');
-          } else {
-            resEl.textContent = `${result.join('')} 没中，再来！`;
-            resEl.className = 'message msg-lose';
-            Engine.play('lose');
-          }
-
-          state.bet = 0;
-          state.spinning = false;
-          document.getElementById('slotBet').textContent = '0';
-          document.getElementById('slotSpinBtn').disabled = false;
-          Engine.updateBalanceUI();
-        }
-      }, 80);
+  function bet(amount) {
+    if (state.balance < amount) {
+      Engine.showQuote('error', '余额不足！');
+      return;
     }
+    state.bet = amount;
+    state.spinning = false;
+    document.getElementById('slotMessage').textContent = '';
+    Slot.updateUI();
+    Engine.play('click');
+  }
+
+  function spin() {
+    if (state.spinning || state.bet === 0) {
+      if (state.bet === 0) Engine.showQuote('error', '请先下注！');
+      return;
+    }
+    if (state.balance < state.bet) {
+      Engine.showQuote('error', '余额不足！');
+      return;
+    }
+
+    state.spinning = true;
+    state.balance -= state.bet;
+    Slot.updateUI();
+
+    const results = [0, 0, 0];
+    let round = 0;
+
+    const spinReel = (index) => {
+      return new Promise(resolve => {
+        const reel = document.getElementById(`reel${index + 1}`);
+        reel.classList.add('spinning');
+
+        const interval = setInterval(() => {
+          reel.textContent = SYMBOLS[Engine.randomInt(0, SYMBOLS.length - 1)];
+        }, 100);
+
+        setTimeout(() => {
+          clearInterval(interval);
+          reel.classList.remove('spinning');
+          const finalIndex = Engine.randomInt(0, SYMBOLS.length - 1);
+          results[index] = finalIndex;
+          reel.textContent = SYMBOLS[finalIndex];
+          resolve();
+        }, 1000 + round * 500);
+      });
+    };
+
+    const playRound = async (r) => {
+      await spinReel(r);
+      round++;
+      if (round < 3) {
+        playRound(round);
+      } else {
+        state.spinning = false;
+        Slot.checkWin(results);
+      }
+    };
+
+    playRound(0);
+  }
+
+  function checkWin(results) {
+    const [r1, r2, r3] = results;
+
+    if (r1 === r2 && r2 === r3) {
+      // Three of a kind
+      const payouts = [5, 10, 20, 50, 100, 500];
+      const win = state.bet * payouts[r1];
+      state.balance += win;
+      Engine.showQuote('win', `🎉 三连！${SYMBOLS_CHINESE[r1]}！赢 ${win} 筹码！`);
+      Engine.play('win');
+      document.getElementById('slotMessage').textContent = `🎉 三连！${SYMBOLS_CHINESE[r1]}！`;
+    } else if (r1 === r2 || r2 === r3 || r1 === r3) {
+      // Two of a kind
+      const win = Math.floor(state.bet * 1.5);
+      state.balance += win;
+      Engine.showQuote('win', `🎉 两连！赢 ${win} 筹码！`);
+      Engine.play('win');
+      document.getElementById('slotMessage').textContent = `🎉 两连！`;
+    } else {
+      Engine.showQuote('lose', '😢 再试一次！');
+      Engine.play('lose');
+      document.getElementById('slotMessage').textContent = '😢 再试一次';
+    }
+
+    Slot.updateUI();
+  }
+
+  function updateUI() {
+    document.querySelectorAll('#page-slot .balance-val').forEach(el => el.textContent = state.balance);
+    document.getElementById('slotBet').textContent = state.bet;
+    document.getElementById('slotSpinBtn').disabled = state.spinning || state.bet === 0;
+  }
+
+  const Slot = {
+    bet,
+    spin,
+    checkWin,
+    updateUI,
+    init
   };
+
+  init();
 })();
