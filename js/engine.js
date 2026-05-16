@@ -106,6 +106,29 @@ const Engine = {
     document.body.appendChild(script);
   },
 
+  // ---- 注册独立游戏页面（用于旧的模块化游戏脚本） ----
+  registerPage(id, html, init) {
+    const page = document.getElementById(`page-${id}`);
+    if (page) {
+      page.innerHTML = html;
+      page.style.display = 'block';
+    } else {
+      const gamePages = document.getElementById('gamePages');
+      if (gamePages) {
+        const div = document.createElement('div');
+        div.className = 'game-page';
+        div.id = `page-${id}`;
+        div.innerHTML = html;
+        div.style.display = 'none';
+        gamePages.appendChild(div);
+      }
+    }
+    // 执行初始化函数
+    if (typeof init === 'function') {
+      init();
+    }
+  },
+
   // ---- 导航 ----
   showGame(gameId) {
     document.querySelectorAll('.game-page').forEach(p => p.classList.remove('active'));
