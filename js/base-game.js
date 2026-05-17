@@ -7,7 +7,6 @@ const BaseGame = {
     const ns = id.replace(/-/g, '_');
     const { tableHTML = '', controlsHTML = '', betOptionsHTML = '' } = opts;
     const html = `
-    <div class="game-page" id="page-${id}">
       <div class="game-top">
         <button class="back-btn" onclick="Engine.backToHall()">← 大厅</button>
         <h2>${icon} ${name}</h2>
@@ -27,8 +26,7 @@ const BaseGame = {
       <div class="current-bet">下注：<span id="${ns}Bet">0</span></div>
       <div class="game-controls">
         ${controlsHTML}
-      </div>
-    </div>`;
+      </div>`;
     const el = document.getElementById(`page-${id}`);
     if (el) { el.innerHTML = html; return; }
     const pages = document.getElementById('gamePages');
