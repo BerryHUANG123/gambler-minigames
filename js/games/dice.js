@@ -17,9 +17,7 @@
   window.diceBet = function(amount) {
     if (!Engine.canBet(amount)) return;
     BaseGame.betHandler('dice', state)(amount);
-    state.choice = null;
     state.result = null;
-    document.querySelectorAll('#page-dice .bet-btn').forEach(b => b.classList.remove('selected'));
     document.getElementById('diceMessage').textContent = '';
     document.getElementById('diceResult').textContent = '';
     document.getElementById('diceRollBtn').disabled = false;
@@ -81,10 +79,6 @@
     document.getElementById('diceRollBtn').disabled = state.bet === 0;
   }
 
-  const Dice = {
-    select,
-    roll,
-    renderDice,
-    updateUI
-  };
+  const Dice = { select, roll, renderDice, updateUI };
+  window.Dice = Dice;
 })();

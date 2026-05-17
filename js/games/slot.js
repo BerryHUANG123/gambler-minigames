@@ -90,8 +90,6 @@
     document.getElementById('slotSpinBtn').disabled = false;
   }
 
-  const Slot = {
-    spin,
-    checkWin
-  };
+  const Slot = { spin, checkWin };
+  window.Slot = Slot;
 })();

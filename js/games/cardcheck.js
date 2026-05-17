@@ -111,11 +111,6 @@
     document.getElementById('cardcheckBet').textContent = state.bet;
   }
 
-  const CardCheck = {
-    select,
-    start,
-    clickCard,
-    renderCards,
-    updateUI
-  };
+  const CardCheck = { select, start, clickCard, renderCards, updateUI };
+  window.CardCheck = CardCheck;
 })();

@@ -82,9 +82,6 @@
     }
   }
 
-  const HiLo = {
-    select,
-    deal,
-    next
-  };
+  const HiLo = { select, deal, next };
+  window.HiLo = HiLo;
 })();
