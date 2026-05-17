@@ -4,7 +4,6 @@
   const SYMBOLS_CHINESE = ['樱桃', '柠檬', '橙子', '葡萄', '钻石', '7'];
 
   let state = {
-    balance: 1000,
     bet: 0,
     spinning: false
   };
@@ -37,16 +36,16 @@
   </div>`;
 
   function init() {
-    Engine.registerPage('slot', html, Slot.init);
+    Engine.registerPage('slot', html);
     Slot.updateUI();
   }
 
   function bet(amount) {
-    if (state.balance < amount) {
-      Engine.showQuote('error', '余额不足！');
-      return;
-    }
+    if (!Engine.canBet(amount)) return;
     state.bet = amount;
+    Engine.state.balance -= amount;
+    Engine.save();
+    Engine.updateBalanceUI();
     state.spinning = false;
     document.getElementById('slotMessage').textContent = '';
     Slot.updateUI();
@@ -58,13 +57,8 @@
       if (state.bet === 0) Engine.showQuote('error', '请先下注！');
       return;
     }
-    if (state.balance < state.bet) {
-      Engine.showQuote('error', '余额不足！');
-      return;
-    }
 
     state.spinning = true;
-    state.balance -= state.bet;
     Slot.updateUI();
 
     const results = [0, 0, 0];
@@ -111,14 +105,14 @@
       // Three of a kind
       const payouts = [5, 10, 20, 50, 100, 500];
       const win = state.bet * payouts[r1];
-      state.balance += win;
+      Engine.addBalance(win);
       Engine.showQuote('win', `🎉 三连！${SYMBOLS_CHINESE[r1]}！赢 ${win} 筹码！`);
       Engine.play('win');
       document.getElementById('slotMessage').textContent = `🎉 三连！${SYMBOLS_CHINESE[r1]}！`;
     } else if (r1 === r2 || r2 === r3 || r1 === r3) {
       // Two of a kind
       const win = Math.floor(state.bet * 1.5);
-      state.balance += win;
+      Engine.addBalance(win);
       Engine.showQuote('win', `🎉 两连！赢 ${win} 筹码！`);
       Engine.play('win');
       document.getElementById('slotMessage').textContent = `🎉 两连！`;
@@ -132,7 +126,7 @@
   }
 
   function updateUI() {
-    document.querySelectorAll('#page-slot .balance-val').forEach(el => el.textContent = state.balance);
+    Engine.updateBalanceUI();
     document.getElementById('slotBet').textContent = state.bet;
     document.getElementById('slotSpinBtn').disabled = state.spinning || state.bet === 0;
   }

@@ -4,7 +4,6 @@
   const VALUES = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 
   let state = {
-    balance: 1000,
     bet: 0,
     result: null
   };
@@ -42,7 +41,7 @@
   </div>`;
 
   function init() {
-    Engine.registerPage('dice', html, Dice.init);
+    Engine.registerPage('dice', html);
     Dice.updateUI();
   }
 
@@ -54,11 +53,11 @@
   }
 
   function bet(amount) {
-    if (state.balance < amount) {
-      Engine.showQuote('error', '余额不足！');
-      return;
-    }
+    if (!Engine.canBet(amount)) return;
     state.bet = amount;
+    Engine.state.balance -= amount;
+    Engine.save();
+    Engine.updateBalanceUI();
     state.choice = null;
     state.result = null;
     document.querySelectorAll('#page-dice .bet-btn').forEach(b => b.classList.remove('selected'));
@@ -73,10 +72,6 @@
       Engine.showQuote('error', '请先下注并选择大或小！');
       return;
     }
-    if (state.balance < state.bet) {
-      Engine.showQuote('error', '余额不足！');
-      return;
-    }
 
     const die1 = Engine.randomInt(1, 6);
     const die2 = Engine.randomInt(1, 6);
@@ -88,16 +83,17 @@
     Dice.updateUI();
 
     const total = state.bet * 2;
-    if ((sum >= 4 && sum <= 10) === state.choice === 'big') {
-      state.balance += total;
+    let won = false;
+    if (state.choice === 'big' && sum >= 11) {
+      won = true;
+    } else if (state.choice === 'small' && sum >= 4 && sum <= 10) {
+      won = true;
+    }
+    if (won) {
+      Engine.addBalance(total);
       Engine.showQuote('win', `🎉 大！点数 ${sum}，赢 ${total} 筹码！`);
       Engine.play('win');
-    } else if ((sum >= 4 && sum <= 10) === state.choice === 'small') {
-      state.balance += total;
-      Engine.showQuote('win', `🎉 小！点数 ${sum}，赢 ${total} 筹码！`);
-      Engine.play('win');
     } else {
-      state.balance -= state.bet;
       Engine.showQuote('lose', `😢 点数 ${sum}，输了 ${state.bet} 筹码！`);
       Engine.play('lose');
     }
@@ -107,25 +103,21 @@
     Dice.updateUI();
   }
 
+  const FACES = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+
   function renderDice() {
-    for (let i = 1; i <= 3; i++) {
-      const die = document.getElementById(`die${i}`);
-      const val = state.result.die1 + state.result.die2 + state.result.die3;
-      const points = val === 3 ? '⚀' : val === 4 ? '⚁' : val === 5 ? '⚂' : val === 6 ? '⚃' : val === 7 ? '⚄' : val === 8 ? '⚅' : '?';
-      die.textContent = points;
+    const dice = [state.result.die1, state.result.die2, state.result.die3];
+    for (let i = 0; i < 3; i++) {
+      const die = document.getElementById(`die${i + 1}`);
+      die.textContent = FACES[dice[i] - 1];
       die.className = 'die';
     }
   }
 
   function updateUI() {
-    document.querySelectorAll('#page-dice .balance-val').forEach(el => el.textContent = state.balance);
+    Engine.updateBalanceUI();
     document.getElementById('diceBet').textContent = state.bet;
     document.getElementById('diceRollBtn').disabled = state.bet === 0;
-  }
-
-  function init() {
-    Engine.registerPage('dice', html, Dice.init);
-    Dice.updateUI();
   }
 
   const Dice = {

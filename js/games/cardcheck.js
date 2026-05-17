@@ -4,7 +4,6 @@
   const VALUES = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 
   let state = {
-    balance: 1000,
     bet: 0,
     cards: [],
     revealed: [],
@@ -39,7 +38,7 @@
   </div>`;
 
   function init() {
-    Engine.registerPage('cardcheck', html, CardCheck.init);
+    Engine.registerPage('cardcheck', html);
     CardCheck.updateUI();
   }
 
@@ -51,11 +50,11 @@
   }
 
   function bet(amount) {
-    if (state.balance < amount) {
-      Engine.showQuote('error', '余额不足！');
-      return;
-    }
+    if (!Engine.canBet(amount)) return;
     state.bet = amount;
+    Engine.state.balance -= amount;
+    Engine.save();
+    Engine.updateBalanceUI();
     state.choice = null;
     state.cards = [];
     state.revealed = [];
@@ -112,7 +111,7 @@
     if (pairsFound === totalPairs) {
       state.solved = true;
       const total = state.bet * 2;
-      state.balance += total;
+      Engine.addBalance(total);
       Engine.showQuote('win', `🎉 全对！赢 ${total} 筹码！`);
       Engine.play('win');
       document.getElementById('cardcheckMessage').textContent = `🎉 全对！所有牌对都已找到！`;
@@ -143,7 +142,7 @@
   }
 
   function updateUI() {
-    document.querySelectorAll('#page-cardcheck .balance-val').forEach(el => el.textContent = state.balance);
+    Engine.updateBalanceUI();
     document.getElementById('cardcheckBet').textContent = state.bet;
   }
 

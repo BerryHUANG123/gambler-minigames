@@ -4,7 +4,6 @@
   const VALUES = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 
   let state = {
-    balance: 1000,
     bet: 0,
     currentCard: null,
     round: 0,
@@ -46,7 +45,7 @@
   </div>`;
 
   function init() {
-    Engine.registerPage('hilo', html, HiLo.init);
+    Engine.registerPage('hilo', html);
     HiLo.updateUI();
   }
 
@@ -60,11 +59,11 @@
   }
 
   function bet(amount) {
-    if (state.balance < amount) {
-      Engine.showQuote('error', '余额不足！');
-      return;
-    }
+    if (!Engine.canBet(amount)) return;
     state.bet = amount;
+    Engine.state.balance -= amount;
+    Engine.save();
+    Engine.updateBalanceUI();
     state.currentCard = null;
     state.round = 0;
     state.choice = null;
@@ -104,12 +103,11 @@
 
     if (won) {
       const total = state.bet * 2;
-      state.balance += total;
+      Engine.addBalance(total);
       Engine.showQuote('win', `🎉 ${isHigh ? '大' : '小'}！赢 ${total} 筹码！`);
       Engine.play('win');
       document.getElementById('hiloMessage').textContent = `✅ ${isHigh ? '大' : '小'}！点数 ${v}${suit}`;
     } else {
-      state.balance -= state.bet;
       Engine.showQuote('lose', `😢 ${isHigh ? '大' : '小'}！点数 ${v}${suit}，输了 ${state.bet} 筹码！`);
       Engine.play('lose');
       document.getElementById('hiloMessage').textContent = `❌ ${isHigh ? '大' : '小'}！点数 ${v}${suit}`;
@@ -140,7 +138,7 @@
   }
 
   function updateUI() {
-    document.querySelectorAll('#page-hilo .balance-val').forEach(el => el.textContent = state.balance);
+    Engine.updateBalanceUI();
     document.getElementById('hiloBet').textContent = state.bet;
     document.getElementById('hiloRound').textContent = state.round + 1;
     document.getElementById('hiloMaxRounds').textContent = state.maxRounds;
