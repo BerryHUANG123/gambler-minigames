@@ -89,6 +89,30 @@ body {
 }
 .badge-ready { background: var(--table-green); color: var(--gold); border: 1px solid var(--gold); }
 
+/* 热门推荐 */
+.hot-section {
+  grid-column: 1 / -1;
+}
+.hot-title {
+  color: var(--gold); margin: 0 0 12px 0; font-size: 1.05rem;
+  text-shadow: 0 0 10px rgba(212,175,55,0.25);
+}
+.hot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+}
+.hot-grid .game-card {
+  border-color: rgba(212,175,55,0.3);
+  background: linear-gradient(145deg, #1e1a10, #1a1408);
+}
+.section-divider {
+  grid-column: 1 / -1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-dark), transparent);
+  margin: 12px 0 8px;
+}
+
 .footer-sig {
   margin-top: auto; padding: 24px 0 16px;
   text-align: center; color: var(--gold);

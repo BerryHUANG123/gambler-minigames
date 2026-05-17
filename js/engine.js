@@ -103,7 +103,7 @@ const Engine = {
     }
 
     const script = document.createElement('script');
-    script.src = `js/games/${id}.js?v=8`;
+    script.src = `js/games/${id}.js?v=9`;
     script.onload = () => {
       this._loaded.add(id);
       this.showGame(id);
@@ -286,23 +286,41 @@ const Engine = {
     if (!grid) return;
 
     const games = this.getGames(category);
+    let html = '';
+
+    // 热门推荐 section（仅在"全部"视图顶部展示）
+    if (category === 'all') {
+      const hotGames = this._registry.filter(g => g.hot);
+      if (hotGames.length) {
+        html += `<div class="hot-section"><h3 class="hot-title">🔥 热门推荐</h3><div class="hot-grid">`;
+        hotGames.forEach(g => { html += this._gameCardHTML(g); });
+        html += `</div></div><div class="section-divider"></div>`;
+      }
+    }
+
     const page = this._page || 0;
     const perPage = 24;
     const totalPages = Math.ceil(games.length / perPage);
     const start = page * perPage;
     const pageGames = games.slice(start, start + perPage);
 
-    grid.innerHTML = pageGames.map(g => `
+    html += pageGames.map(g => this._gameCardHTML(g)).join('');
+    html += this._renderPagination(totalPages, page);
+
+    grid.innerHTML = html;
+    this._currentCategory = category;
+    this.updateBalanceUI();
+  },
+
+  _gameCardHTML(g) {
+    return `
       <div class="game-card" data-game="${g.id}" onmouseenter="Engine.showTooltip('${g.id}', event)" onmousemove="Engine.moveTooltip(event)" onmouseleave="Engine.hideTooltip()" onclick="Engine.loadGame('${g.id}')">
         <div class="icon">${g.icon}</div>
         <div class="name">${g.name}</div>
         <div class="desc">${g.desc}</div>
         <span class="badge badge-ready">▶ 开玩</span>
       </div>
-    `).join('') + this._renderPagination(totalPages, page);
-
-    this._currentCategory = category;
-    this.updateBalanceUI();
+    `;
   },
 
   _renderPagination(totalPages, page) {
