@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>测试链接</title>
+</head>
+<body>
+  <h1>测试链接是否正常工作</h1>
+  <p>点击下面的按钮应该在新标签页打开三骰比大小游戏：</p>
+
+  <button onclick="window.open('js/games/dice3.html', '_blank')">方法1: window.open()</button>
+  <br><br>
+
+  <a href="js/games/dice3.html" target="_blank" style="display:block; padding: 15px 20px; background: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-size: 16px; margin-top: 10px;">
+    方法2: <a> 标签 (target="_blank")
+  </a>
+
+  <p style="margin-top: 30px; color: #666;">
+    如果上面的链接点击后能打开新页面，说明服务器和文件路径没问题。<br>
+    如果都不能打开，请检查浏览器 Console 里的错误信息。
+  </p>
+</body>
+</html>

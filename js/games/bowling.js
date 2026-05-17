@@ -3,40 +3,31 @@
 (function() {
   let state = { bet: 0, frameBet: 0, round: 0, totalRounds: 10, score: 0, active: false };
 
-  const html = `
-  <div class="game-page" id="page-bowling">
-    <div class="game-top">
-      <button class="back-btn" onclick="Engine.backToHall()">← 大厅</button>
-      <h2>🎳 保龄球</h2>
-    </div>
-    <div class="top-bar">
-      <div class="balance-display">💰 <span class="balance-val">0</span></div>
-    </div>
-    <div class="game-table">
+  BaseGame.init('bowling', '🎳', '保龄球', {
+    tableHTML: `
       <div class="dice-area" style="flex-direction:column;gap:10px;">
         <div id="bowlingPins" style="font-size:3em;">🎳🎳🎳🎳🎳🎳🎳🎳🎳🎳</div>
         <div id="bowlingScore" class="message msg-info">局数：0/10 总分：0</div>
         <div id="bowlingResult" class="message">下注后投球！</div>
-      </div>
-    </div>
-    <div class="bet-options" style="gap:10px;">
-      <button class="bet-btn" onclick="Bowling.betFrame(100)">每局下注100</button>
-      <button class="bet-btn" onclick="Bowling.betFrame(200)">每局下注200</button>
-    </div>
-    <div class="chips">
-      <div class="chip chip-100" onclick="Bowling.bet(100)">100</div>
-      <div class="chip chip-500" onclick="Bowling.bet(500)">500</div>
-      <div class="chip chip-1000" onclick="Bowling.bet(1000)">1000</div>
-    </div>
-    <div class="current-bet">下注：<span id="bowlingBet">0</span> | 每局：<span id="bowlingFrameBet">0</span></div>
-    <div class="game-controls">
-      <button class="btn btn-primary" onclick="Bowling.roll()" id="bowlingRollBtn">🎳 投球！</button>
-    </div>
-  </div>`;
-
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('gamePages').insertAdjacentHTML('beforeend', html);
+      </div>`,
+    betOptionsHTML: `
+      <div class="bet-options" style="gap:10px;">
+        <button class="bet-btn" onclick="Bowling.betFrame(100)">每局下注100</button>
+        <button class="bet-btn" onclick="Bowling.betFrame(200)">每局下注200</button>
+      </div>`,
+    controlsHTML: `
+      <button class="btn btn-primary" onclick="Bowling.roll()" id="bowlingRollBtn">🎳 投球！</button>`
   });
+
+  window.bowlingBet = function(amount) {
+    if (state.active) return;
+    if (!Engine.canBet(amount)) {
+      document.getElementById('bowlingResult').textContent = '筹码不够！';
+      document.getElementById('bowlingResult').className = 'message msg-lose';
+      return;
+    }
+    BaseGame.betHandler('bowling', state)(amount);
+  };
 
   function getPinsEmoji(knocked) {
     const total = 10;
@@ -45,21 +36,6 @@
   }
 
   window.Bowling = {
-    bet(amount) {
-      if (state.active) return;
-      if (!Engine.canBet(amount)) {
-        document.getElementById('bowlingResult').textContent = '筹码不够！';
-        document.getElementById('bowlingResult').className = 'message msg-lose';
-        return;
-      }
-      state.bet += amount;
-      Engine.state.balance -= amount;
-      Engine.save();
-      Engine.updateBalanceUI();
-      document.getElementById('bowlingBet').textContent = state.bet;
-      Engine.play('click');
-    },
-
     betFrame(amount) {
       if (!Engine.canBet(amount)) {
         document.getElementById('bowlingResult').textContent = '筹码不够！';

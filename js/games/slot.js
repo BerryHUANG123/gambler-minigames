@@ -8,49 +8,18 @@
     spinning: false
   };
 
-  const html = `<div class="game-page" id="page-slot">
-    <div class="game-top">
-      <button class="back-btn" onclick="Engine.backToHall()">← 大厅</button>
-      <h2>🎰 老虎机</h2>
-    </div>
-    <div class="top-bar">
-      <div class="balance-display">💰 <span class="balance-val">0</span></div>
-    </div>
-    <div class="game-table">
-      <div class="reels-container">
-        <div class="reel" id="reel1">🍒</div>
-        <div class="reel" id="reel2">🍒</div>
-        <div class="reel" id="reel3">🍒</div>
-      </div>
-      <div id="slotMessage" class="message"></div>
-    </div>
-    <div class="chips">
-      <div class="chip chip-100" onclick="Slot.bet(100)">100</div>
-      <div class="chip chip-500" onclick="Slot.bet(500)">500</div>
-      <div class="chip chip-1000" onclick="Slot.bet(1000)">1000</div>
-    </div>
-    <div class="current-bet">下注：<span id="slotBet">0</span></div>
-    <div class="game-controls">
-      <button class="btn btn-primary" id="slotSpinBtn" onclick="Slot.spin()">🎰 旋转</button>
-    </div>
-  </div>`;
+  BaseGame.init('slot', '🎰', '老虎机', {
+    tableHTML: '<div class="reels-container"><div class="reel" id="reel1">🍒</div><div class="reel" id="reel2">🍒</div><div class="reel" id="reel3">🍒</div></div><div id="slotMessage" class="message"></div>',
+    controlsHTML: '<button class="btn btn-primary" id="slotSpinBtn" onclick="Slot.spin()">🎰 旋转</button>'
+  });
 
-  function init() {
-    Engine.registerPage('slot', html);
-    Slot.updateUI();
-  }
-
-  function bet(amount) {
+  window.slotBet = function(amount) {
     if (!Engine.canBet(amount)) return;
-    state.bet = amount;
-    Engine.state.balance -= amount;
-    Engine.save();
-    Engine.updateBalanceUI();
+    BaseGame.betHandler('slot', state)(amount);
     state.spinning = false;
     document.getElementById('slotMessage').textContent = '';
-    Slot.updateUI();
-    Engine.play('click');
-  }
+    document.getElementById('slotSpinBtn').disabled = false;
+  };
 
   function spin() {
     if (state.spinning || state.bet === 0) {
@@ -59,7 +28,7 @@
     }
 
     state.spinning = true;
-    Slot.updateUI();
+    document.getElementById('slotSpinBtn').disabled = true;
 
     const results = [0, 0, 0];
     let round = 0;
@@ -102,42 +71,27 @@
     const [r1, r2, r3] = results;
 
     if (r1 === r2 && r2 === r3) {
-      // Three of a kind
       const payouts = [5, 10, 20, 50, 100, 500];
       const win = state.bet * payouts[r1];
-      Engine.addBalance(win);
+      BaseGame.settle('slot', state, true, win);
       Engine.showQuote('win', `🎉 三连！${SYMBOLS_CHINESE[r1]}！赢 ${win} 筹码！`);
-      Engine.play('win');
       document.getElementById('slotMessage').textContent = `🎉 三连！${SYMBOLS_CHINESE[r1]}！`;
     } else if (r1 === r2 || r2 === r3 || r1 === r3) {
-      // Two of a kind
       const win = Math.floor(state.bet * 1.5);
-      Engine.addBalance(win);
+      BaseGame.settle('slot', state, true, win);
       Engine.showQuote('win', `🎉 两连！赢 ${win} 筹码！`);
-      Engine.play('win');
       document.getElementById('slotMessage').textContent = `🎉 两连！`;
     } else {
+      BaseGame.settle('slot', state, false, 0);
       Engine.showQuote('lose', '😢 再试一次！');
-      Engine.play('lose');
       document.getElementById('slotMessage').textContent = '😢 再试一次';
     }
 
-    Slot.updateUI();
-  }
-
-  function updateUI() {
-    Engine.updateBalanceUI();
-    document.getElementById('slotBet').textContent = state.bet;
-    document.getElementById('slotSpinBtn').disabled = state.spinning || state.bet === 0;
+    document.getElementById('slotSpinBtn').disabled = false;
   }
 
   const Slot = {
-    bet,
     spin,
-    checkWin,
-    updateUI,
-    init
+    checkWin
   };
-
-  init();
 })();

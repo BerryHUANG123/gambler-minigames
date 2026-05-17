@@ -1,47 +1,20 @@
-// ========== 拆弹 💣 (Bomb Defusal) ==========
-
 (function() {
   let state = { bet: 0, bombIndex: -1, exploded: false, picked: false };
 
-  const html = `
-  <div class="game-page" id="page-bomb">
-    <div class="game-top">
-      <button class="back-btn" onclick="Engine.backToHall()">← 大厅</button>
-      <h2>💣 拆弹</h2>
-    </div>
-    <div class="top-bar">
-      <div class="balance-display">💰 <span class="balance-val">0</span></div>
-    </div>
-    <div class="game-table">
-      <div id="bombDisplay" style="font-size:4rem;margin:10px 0;">💣</div>
-      <div class="hand" id="bombButtons" style="gap:16px;"></div>
-      <div id="bombResult" class="message">三个按钮，一个会炸！</div>
-    </div>
-    <div class="chips">
-      <div class="chip chip-100" onclick="Bomb.bet(100)">100</div>
-      <div class="chip chip-500" onclick="Bomb.bet(500)">500</div>
-      <div class="chip chip-1000" onclick="Bomb.bet(1000)">1000</div>
-    </div>
-    <div class="current-bet">下注：<span id="bombBet">0</span></div>
-    <div class="game-controls">
-      <button class="btn" id="bombNewBtn" onclick="Bomb.newGame()">新一局</button>
-    </div>
-  </div>`;
-
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('gamePages').insertAdjacentHTML('beforeend', html);
+  BaseGame.init('bomb', '💣', '拆弹', {
+    tableHTML: '<div id="bombDisplay" style="font-size:4rem;margin:10px 0;">💣</div><div class="hand" id="bombButtons" style="gap:16px;"></div><div id="bombResult" class="message">三个按钮，一个会炸！</div>',
+    controlsHTML: '<button class="btn" onclick="Bomb.newGame()">新一局</button>'
   });
 
-  window.Bomb = {
-    bet(amount) {
-      if (state.picked) return;
-      if (!Engine.canBet(amount)) return;
-      state.bet += amount;
-      Engine.state.balance -= amount; Engine.save(); Engine.updateBalanceUI();
-      document.getElementById('bombBet').textContent = state.bet; Engine.play('click');
-      if (state.bet > 0 && state.bombIndex === -1) Bomb.setup();
-    },
+  var _bet = BaseGame.betHandler('bomb', state);
 
+  window.bombBet = function(amount) {
+    if (state.picked) return;
+    _bet(amount);
+    if (state.bet > 0 && state.bombIndex === -1) Bomb.setup();
+  };
+
+  window.Bomb = {
     setup() {
       state.bombIndex = Engine.randomInt(0, 2);
       state.exploded = false;
@@ -71,24 +44,20 @@
         return `<div style="width:80px;height:80px;border-radius:50%;background:#222;display:flex;align-items:center;justify-content:center;font-size:1.5rem;border:2px solid #444;opacity:0.3;">❓</div>`;
       });
 
-      Engine.play(isBomb ? 'lose' : 'win');
       const res = document.getElementById('bombResult');
       if (isBomb) {
         document.getElementById('bombDisplay').textContent = '💥💀';
         res.textContent = `💥 炸了！输 ${state.bet}`;
         res.className = 'message msg-lose';
         Engine.showQuote('taunt');
+        BaseGame.settle('bomb', state, false, 0);
       } else {
         const win = state.bet * 3;
-        Engine.addBalance(win);
         res.textContent = `✅ 安全！你拆掉了炸弹！赢 ${win}`;
         res.className = 'message msg-win';
-        Engine.play('win');
         Engine.showQuote('win');
+        BaseGame.settle('bomb', state, true, win);
       }
-      state.bet = 0;
-      document.getElementById('bombBet').textContent = '0';
-      Engine.updateBalanceUI();
     },
 
     newGame() {

@@ -1,6 +1,42 @@
 (function () {
   'use strict';
 
+  BaseGame.init('game2048', '🔢', '2048', {
+    tableHTML: [
+      '<div class="game-container game2048-container">',
+      '<h3>🔢 2048</h3>',
+      '<div class="score-bar"><span>分数: <span id="g2048-score">0</span></span></div>',
+      '<div class="g2048-board" id="g2048-board">',
+      '<div class="g2048-cell" data-r="0" data-c="0"></div>',
+      '<div class="g2048-cell" data-r="0" data-c="1"></div>',
+      '<div class="g2048-cell" data-r="0" data-c="2"></div>',
+      '<div class="g2048-cell" data-r="0" data-c="3"></div>',
+      '<div class="g2048-cell" data-r="1" data-c="0"></div>',
+      '<div class="g2048-cell" data-r="1" data-c="1"></div>',
+      '<div class="g2048-cell" data-r="1" data-c="2"></div>',
+      '<div class="g2048-cell" data-r="1" data-c="3"></div>',
+      '<div class="g2048-cell" data-r="2" data-c="0"></div>',
+      '<div class="g2048-cell" data-r="2" data-c="1"></div>',
+      '<div class="g2048-cell" data-r="2" data-c="2"></div>',
+      '<div class="g2048-cell" data-r="2" data-c="3"></div>',
+      '<div class="g2048-cell" data-r="3" data-c="0"></div>',
+      '<div class="g2048-cell" data-r="3" data-c="1"></div>',
+      '<div class="g2048-cell" data-r="3" data-c="2"></div>',
+      '<div class="g2048-cell" data-r="3" data-c="3"></div>',
+      '</div>',
+      '<div class="msg-info" id="g2048-msg">合并方块，达到2048！</div>',
+      '</div>'
+    ].join(''),
+    controlsHTML: [
+      '<button class="chip-100" onclick="doMove(\'up\')">↑</button>',
+      '<div>',
+      '<button class="chip-100" onclick="doMove(\'left\')">←</button>',
+      '<button class="chip-100" onclick="doMove(\'down\')">↓</button>',
+      '<button class="chip-100" onclick="doMove(\'right\')">→</button>',
+      '</div>'
+    ].join('')
+  });
+
   var gameId = 'game2048';
   var SIZE = 4;
   var grid, score, bestScore;
@@ -130,30 +166,6 @@
     }
   }
 
-  function render() {
-    var html = '<div class="game-container game2048-container">';
-    html += '<h3>🔢 2048</h3>';
-    html += '<div class="score-bar"><span>分数: <span id="g2048-score">0</span></span></div>';
-    html += '<div class="g2048-board" id="g2048-board">';
-    for (var r = 0; r < SIZE; r++) {
-      for (var c = 0; c < SIZE; c++) {
-        html += '<div class="g2048-cell" data-r="' + r + '" data-c="' + c + '"></div>';
-      }
-    }
-    html += '</div>';
-    html += '<div class="g2048-controls">';
-    html += '<button class="chip-100" onclick="doMove(\'up\')">↑</button>';
-    html += '<div><button class="chip-100" onclick="doMove(\'left\')">←</button>';
-    html += '<button class="chip-100" onclick="doMove(\'down\')">↓</button>';
-    html += '<button class="chip-100" onclick="doMove(\'right\')">→</button></div>';
-    html += '</div>';
-    html += '<div class="msg-info" id="g2048-msg">合并方块，达到2048！</div>';
-    html += '<button class="btn-back" onclick="Engine.backToHall()">返回大厅</button>';
-    html += '</div>';
-    var el = document.getElementById('gamePages');
-    if (el) el.insertAdjacentHTML('beforeend', html);
-  }
-
   function renderBoard() {
     var cells = document.querySelectorAll('.g2048-cell');
     cells.forEach(function (cell) {
@@ -178,7 +190,6 @@
   }
 
   function checkGameState() {
-    // Check win
     for (var r = 0; r < SIZE; r++) {
       for (var c = 0; c < SIZE; c++) {
         if (grid[r][c] >= 2048 && !won) {
@@ -197,7 +208,6 @@
       }
     }
 
-    // Check game over
     var hasEmpty = false;
     for (var r2 = 0; r2 < SIZE; r2++) {
       for (var c2 = 0; c2 < SIZE; c2++) {
@@ -205,7 +215,6 @@
       }
     }
     if (!hasEmpty) {
-      // Check if any merge possible
       var canMerge = false;
       for (var r3 = 0; r3 < SIZE && !canMerge; r3++) {
         for (var c3 = 0; c3 < SIZE && !canMerge; c3++) {
@@ -229,18 +238,11 @@
     Engine.addBalance(-amount);
     Engine.play('click');
     initGrid();
-    render();
     renderBoard();
     Engine.updateBalanceUI();
     Engine.save();
   }
 
-  if (window.GameRegistry) {
-    GameRegistry.register(gameId, {
-      name: '2048',
-      icon: '🔢',
-      start: startGame,
-      minBet: 10
-    });
-  }
+  window.game2048Bet = startGame;
+  window.doMove = doMove;
 })();

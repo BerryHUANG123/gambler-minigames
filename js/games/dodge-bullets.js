@@ -1,42 +1,18 @@
-// ========== 躲子弹 💫 (Dodge Bullets) ==========
 (function() {
   let state = { bet: 0, score: 0, playing: false, timer: null, spawnTimer: null, timeLeft: 15, bullets: [] };
 
-  const html = `
-  <div class="game-page" id="page-dodge">
-    <div class="game-top">
-      <button class="back-btn" onclick="Dodge.back()">← 大厅</button>
-      <h2>💫 躲子弹</h2>
-    </div>
-    <div class="top-bar"><div class="balance-display">💰 <span class="balance-val">0</span></div></div>
-    <div class="game-table">
-      <div id="dodgeArea" style="position:relative;width:100%;height:260px;background:rgba(0,0,0,0.3);border-radius:12px;overflow:hidden;cursor:pointer;" onclick="Dodge.movePlayer(event)">
-        <div id="dodgePlayer" style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);font-size:2rem;transition:left 0.05s;">🧑</div>
-      </div>
-      <div style="display:flex;justify-content:space-between;width:100%;margin-top:6px;">
-        <span>躲过：<span id="dodgeScore" style="color:var(--gold);">0</span></span>
-        <span>时间：<span id="dodgeTime" style="color:var(--gold);">15</span>s</span>
-      </div>
-      <div id="dodgeResult" class="message"></div>
-    </div>
-    <div class="chips">
-      <div class="chip chip-100" onclick="Dodge.bet(100)">100</div>
-      <div class="chip chip-500" onclick="Dodge.bet(500)">500</div>
-      <div class="chip chip-1000" onclick="Dodge.bet(1000)">1000</div>
-    </div>
-    <div class="current-bet">下注：<span id="dodgeBet">0</span></div>
-    <div class="game-controls">
-      <button class="btn btn-primary" id="dodgeStartBtn" onclick="Dodge.start()">开始！</button>
-    </div>
-  </div>`;
-
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('gamePages').insertAdjacentHTML('beforeend', html);
+  BaseGame.init('dodge-bullets', '💫', '躲子弹', {
+    tableHTML: '<div id="dodgeArea" style="position:relative;width:100%;height:260px;background:rgba(0,0,0,0.3);border-radius:12px;overflow:hidden;cursor:pointer;" onclick="Dodge.movePlayer(event)"><div id="dodgePlayer" style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);font-size:2rem;transition:left 0.05s;">🧑</div></div><div style="display:flex;justify-content:space-between;width:100%;margin-top:6px;"><span>躲过：<span id="dodgeScore" style="color:var(--gold);">0</span></span><span>时间：<span id="dodgeTime" style="color:var(--gold);">15</span>s</span></div><div id="dodgeResult" class="message"></div>',
+    controlsHTML: '<button class="btn btn-primary" id="dodgeStartBtn" onclick="Dodge.start()">开始！</button>'
   });
 
+  window.dodgeBet = function(amount) {
+    if (state.playing) return;
+    if (!Engine.canBet(amount)) return;
+    BaseGame.betHandler('dodge', state)(amount);
+  };
+
   window.Dodge = {
-    back() { Engine.backToHall(); },
-    bet(amount) { if (state.playing) return; if (!Engine.canBet(amount)) return; state.bet += amount; Engine.state.balance -= amount; Engine.save(); Engine.updateBalanceUI(); document.getElementById('dodgeBet').textContent = state.bet; Engine.play('click'); },
     movePlayer(e) {
       if (!state.playing) return;
       const area = document.getElementById('dodgeArea');
@@ -52,7 +28,6 @@
       document.getElementById('dodgeScore').textContent = '0';
       document.getElementById('dodgeTime').textContent = '15';
       document.getElementById('dodgeResult').textContent = '';
-
       state.timer = setInterval(() => {
         state.timeLeft--;
         document.getElementById('dodgeTime').textContent = state.timeLeft;
@@ -98,19 +73,16 @@
       const res = document.getElementById('dodgeResult');
       if (won) {
         const win = Math.floor(state.bet * (1 + state.score * 0.1));
-        Engine.addBalance(win);
         res.textContent = `🎉 活下来了！躲过 ${state.score} 颗子弹！赢 ${win} 筹码！`;
         res.className = 'message msg-win';
         Engine.showQuote('win');
+        BaseGame.settle('dodge', state, true, win);
       } else {
         res.textContent = `💥 被击中了！输 ${state.bet}`;
         res.className = 'message msg-lose';
-        Engine.play('lose');
+        BaseGame.settle('dodge', state, false, 0);
       }
-      state.bet = 0; document.getElementById('dodgeBet').textContent = '0';
-      Engine.updateBalanceUI();
     }
   };
-  // Hit detection loop
   setInterval(() => { if (state.playing) Dodge.checkHit(); }, 100);
 })();

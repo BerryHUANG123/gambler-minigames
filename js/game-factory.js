@@ -10,41 +10,22 @@ const GameFactory = {
     const ns = id.replace(/-/g,'_');
     const state = { bet: 0, target: 0, guesses: 0, gameOver: false };
 
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('gamePages').insertAdjacentHTML('beforeend', `
-      <div class="game-page" id="page-${id}">
-        <div class="game-top">
-          <button class="back-btn" onclick="Engine.backToHall()">← 大厅</button>
-          <h2>${icon} ${name}</h2>
-        </div>
-        <div class="top-bar"><div class="balance-display">💰 <span class="balance-val">0</span></div></div>
-        <div class="game-table">
-          <div style="font-size:3rem;" id="${ns}Display">${icon}</div>
-          <div id="${ns}Hint" class="message msg-info">${desc} 猜${min}-${max}，${attempts}次机会</div>
-          <div id="${ns}Result" class="message"></div>
-          <div style="margin:8px 0;"><input type="number" id="${ns}Input" min="${min}" max="${max}" placeholder="输入数字" style="padding:8px 16px;border-radius:8px;border:2px solid var(--gold);background:#222;color:var(--cream);font-size:1.2rem;width:120px;text-align:center;font-family:inherit;"></div>
-          <div id="${ns}Guesses" style="font-size:0.8rem;color:#888;"></div>
-        </div>
-        <div class="chips">
-          <div class="chip chip-100" onclick="${ns}Bet(100)">100</div>
-          <div class="chip chip-500" onclick="${ns}Bet(500)">500</div>
-          <div class="chip chip-1000" onclick="${ns}Bet(1000)">1000</div>
-        </div>
-        <div class="current-bet">下注：<span id="${ns}Bet">0</span></div>
-        <div class="game-controls">
-          <button class="btn btn-primary" id="${ns}GuessBtn" onclick="${ns}Guess()">猜！</button>
-          <button class="btn" onclick="${ns}Reset()">新一局</button>
-        </div>
-      </div>`);
+    BaseGame.init(id, icon, name, {
+      tableHTML: `
+        <div style="font-size:3rem;" id="${ns}Display">${icon}</div>
+        <div id="${ns}Hint" class="message msg-info">${desc} 猜${min}-${max}，${attempts}次机会</div>
+        <div id="${ns}Result" class="message"></div>
+        <div style="margin:8px 0;"><input type="number" id="${ns}Input" min="${min}" max="${max}" placeholder="输入数字" style="padding:8px 16px;border-radius:8px;border:2px solid var(--gold);background:#222;color:var(--cream);font-size:1.2rem;width:120px;text-align:center;font-family:inherit;"></div>
+        <div id="${ns}Guesses" style="font-size:0.8rem;color:#888;"></div>`,
+      controlsHTML: `
+        <button class="btn btn-primary" id="${ns}GuessBtn" onclick="${ns}Guess()">猜！</button>
+        <button class="btn" onclick="${ns}Reset()">新一局</button>`
     });
 
-    window[`${ns}Bet`] = (amount) => {
+    const baseBet = BaseGame.betHandler(ns, state);
+    window[`${ns}Bet`] = function(amount) {
       if (state.gameOver) return;
-      if (!Engine.canBet(amount)) return;
-      state.bet += amount;
-      Engine.state.balance -= amount; Engine.save(); Engine.updateBalanceUI();
-      document.getElementById(`${ns}Bet`).textContent = state.bet;
-      Engine.play('click');
+      baseBet(amount);
       if (state.bet > 0 && state.target === 0) {
         state.target = Engine.randomInt(min, max);
         state.guesses = 0;
@@ -63,17 +44,17 @@ const GameFactory = {
       const res = document.getElementById(`${ns}Result`);
       if (val === state.target) {
         const win = state.bet * multiplier;
-        Engine.addBalance(win);
+        BaseGame.settle(ns, state, true, win);
         res.textContent = `🎉 对了！就是${val}！赢 ${win} 筹码！`;
         res.className = 'message msg-win';
-        Engine.play('win');
         Engine.showQuote('win');
         document.getElementById(`${ns}Display`).textContent = `🎉 ${val}`;
         state.gameOver = true;
       } else if (state.guesses >= attempts) {
-        res.textContent = `😢 次数用完了，答案是${state.target}，输 ${state.bet}`;
+        const loseAmount = state.bet;
+        BaseGame.settle(ns, state, false, 0);
+        res.textContent = `😢 次数用完了，答案是${state.target}，输 ${loseAmount}`;
         res.className = 'message msg-lose';
-        Engine.play('lose');
         document.getElementById(`${ns}Display`).textContent = `💀 ${state.target}`;
         state.gameOver = true;
       } else {
@@ -106,41 +87,22 @@ const GameFactory = {
     const ns = id.replace(/-/g,'_');
     const state = { bet: 0, qIdx: 0, score: 0, total: questions.length, answered: false, gameOver: false };
 
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('gamePages').insertAdjacentHTML('beforeend', `
-      <div class="game-page" id="page-${id}">
-        <div class="game-top">
-          <button class="back-btn" onclick="Engine.backToHall()">← 大厅</button>
-          <h2>${icon} ${name}</h2>
-        </div>
-        <div class="top-bar"><div class="balance-display">💰 <span class="balance-val">0</span></div></div>
-        <div class="game-table">
-          <div id="${ns}Progress" style="font-size:0.8rem;color:#888;margin-bottom:8px;"></div>
-          <div id="${ns}Question" style="font-size:1.1rem;color:var(--cream);margin:12px 0;"></div>
-          <div id="${ns}Options" style="display:flex;flex-direction:column;gap:8px;width:100%;max-width:360px;margin:8px auto;"></div>
-          <div id="${ns}Result" class="message"></div>
-          <div id="${ns}Final" style="font-size:1.2rem;font-weight:bold;color:var(--gold);"></div>
-        </div>
-        <div class="chips">
-          <div class="chip chip-100" onclick="${ns}Bet(100)">100</div>
-          <div class="chip chip-500" onclick="${ns}Bet(500)">500</div>
-          <div class="chip chip-1000" onclick="${ns}Bet(1000)">1000</div>
-        </div>
-        <div class="current-bet">下注：<span id="${ns}Bet">0</span></div>
-        <div class="game-controls">
-          <button class="btn" id="${ns}NextBtn" onclick="${ns}Next()" style="display:none;">下一题</button>
-          <button class="btn" onclick="${ns}Reset()">重新开始</button>
-        </div>
-      </div>`);
+    BaseGame.init(id, icon, name, {
+      tableHTML: `
+        <div id="${ns}Progress" style="font-size:0.8rem;color:#888;margin-bottom:8px;"></div>
+        <div id="${ns}Question" style="font-size:1.1rem;color:var(--cream);margin:12px 0;"></div>
+        <div id="${ns}Options" style="display:flex;flex-direction:column;gap:8px;width:100%;max-width:360px;margin:8px auto;"></div>
+        <div id="${ns}Result" class="message"></div>
+        <div id="${ns}Final" style="font-size:1.2rem;font-weight:bold;color:var(--gold);"></div>`,
+      controlsHTML: `
+        <button class="btn" id="${ns}NextBtn" onclick="${ns}Next()" style="display:none;">下一题</button>
+        <button class="btn" onclick="${ns}Reset()">重新开始</button>`
     });
 
-    window[`${ns}Bet`] = (amount) => {
+    const baseBet = BaseGame.betHandler(ns, state);
+    window[`${ns}Bet`] = function(amount) {
       if (state.gameOver) return;
-      if (!Engine.canBet(amount)) return;
-      state.bet += amount;
-      Engine.state.balance -= amount; Engine.save(); Engine.updateBalanceUI();
-      document.getElementById(`${ns}Bet`).textContent = state.bet;
-      Engine.play('click');
+      baseBet(amount);
       if (state.bet > 0 && state.qIdx === 0) window[`${ns}ShowQuestion`]();
     };
 
@@ -189,12 +151,11 @@ const GameFactory = {
       state.gameOver = true;
       const pct = state.score / state.total;
       const win = Math.floor(state.bet * (1 + pct * 2));
-      Engine.addBalance(win);
+      BaseGame.settle(ns, state, true, win);
       document.getElementById(`${ns}Final`).textContent =
         `🎉 答对 ${state.score}/${state.total} 题，赢得 ${win} 筹码！`;
       if (pct >= 0.8) Engine.showQuote('jackpot');
       else if (pct >= 0.5) Engine.showQuote('win');
-      Engine.play('win');
     };
 
     window[`${ns}Reset`] = () => {
@@ -216,44 +177,25 @@ const GameFactory = {
     const ns = id.replace(/-/g,'_');
     const state = { bet: 0, score: 0, playing: false, timeLeft: 0, timer: null };
 
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('gamePages').insertAdjacentHTML('beforeend', `
-      <div class="game-page" id="page-${id}">
-        <div class="game-top">
-          <button class="back-btn" onclick="Engine.backToHall()">← 大厅</button>
-          <h2>${icon} ${name}</h2>
+    BaseGame.init(id, icon, name, {
+      tableHTML: `
+        <div id="${ns}GameArea" style="position:relative;width:100%;height:200px;background:rgba(0,0,0,0.3);border-radius:12px;overflow:hidden;cursor:pointer;">
+          <div id="${ns}Target" style="position:absolute;font-size:3rem;cursor:pointer;display:none;transition:all 0.1s;"></div>
+          <div id="${ns}Ready" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#888;">下注后开始游戏</div>
         </div>
-        <div class="top-bar"><div class="balance-display">💰 <span class="balance-val">0</span></div></div>
-        <div class="game-table">
-          <div id="${ns}GameArea" style="position:relative;width:100%;height:200px;background:rgba(0,0,0,0.3);border-radius:12px;overflow:hidden;cursor:pointer;">
-            <div id="${ns}Target" style="position:absolute;font-size:3rem;cursor:pointer;display:none;transition:all 0.1s;"></div>
-            <div id="${ns}Ready" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#888;">下注后开始游戏</div>
-          </div>
-          <div style="display:flex;justify-content:space-between;width:100%;margin-top:6px;">
-            <span>得分：<span id="${ns}Score" style="color:var(--gold);">0</span></span>
-            <span>时间：<span id="${ns}Time" style="color:var(--gold);">${timeLimit}</span>s</span>
-          </div>
-          <div id="${ns}Result" class="message"></div>
+        <div style="display:flex;justify-content:space-between;width:100%;margin-top:6px;">
+          <span>得分：<span id="${ns}Score" style="color:var(--gold);">0</span></span>
+          <span>时间：<span id="${ns}Time" style="color:var(--gold);">${timeLimit}</span>s</span>
         </div>
-        <div class="chips">
-          <div class="chip chip-100" onclick="${ns}Bet(100)">100</div>
-          <div class="chip chip-500" onclick="${ns}Bet(500)">500</div>
-          <div class="chip chip-1000" onclick="${ns}Bet(1000)">1000</div>
-        </div>
-        <div class="current-bet">下注：<span id="${ns}Bet">0</span></div>
-        <div class="game-controls">
-          <button class="btn btn-primary" id="${ns}StartBtn" onclick="${ns}Start()">开始！</button>
-        </div>
-      </div>`);
+        <div id="${ns}Result" class="message"></div>`,
+      controlsHTML: `
+        <button class="btn btn-primary" id="${ns}StartBtn" onclick="${ns}Start()">开始！</button>`
     });
 
-    window[`${ns}Bet`] = (amount) => {
+    const baseBet = BaseGame.betHandler(ns, state);
+    window[`${ns}Bet`] = function(amount) {
       if (state.playing) return;
-      if (!Engine.canBet(amount)) return;
-      state.bet += amount;
-      Engine.state.balance -= amount; Engine.save(); Engine.updateBalanceUI();
-      document.getElementById(`${ns}Bet`).textContent = state.bet;
-      Engine.play('click');
+      baseBet(amount);
     };
 
     window[`${ns}Start`] = () => {
@@ -266,7 +208,6 @@ const GameFactory = {
       document.getElementById(`${ns}Score`).textContent = '0';
       document.getElementById(`${ns}Time`).textContent = timeLimit;
       document.getElementById(`${ns}Result`).textContent = '';
-      const area = document.getElementById(`${ns}GameArea`);
       const target = document.getElementById(`${ns}Target`);
       target.style.display = 'block';
       target.onclick = () => { if (state.playing) window[`${ns}Hit`](); };
@@ -310,17 +251,14 @@ const GameFactory = {
       document.getElementById(`${ns}Target`).style.display = 'none';
       document.getElementById(`${ns}StartBtn`).disabled = false;
       const win = Math.floor(state.bet * (1 + state.score * 0.2));
-      Engine.addBalance(win);
+      BaseGame.settle(ns, state, true, win);
       const res = document.getElementById(`${ns}Result`);
       res.textContent = `⏰ 时间到！击中 ${state.score} 次，赢得 ${win} 筹码！`;
       res.className = state.score >= 5 ? 'message msg-win' : 'message';
       if (state.score >= 8) Engine.showQuote('jackpot');
       else if (state.score >= 5) Engine.showQuote('win');
-      state.bet = 0;
-      document.getElementById(`${ns}Bet`).textContent = '0';
       document.getElementById(`${ns}Ready`).style.display = 'block';
       document.getElementById(`${ns}Ready`).textContent = '再来一局！';
-      Engine.updateBalanceUI();
     };
   },
 
@@ -330,37 +268,16 @@ const GameFactory = {
     const ns = id.replace(/-/g,'_');
     const state = { bet: 0, spinning: false };
 
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('gamePages').insertAdjacentHTML('beforeend', `
-      <div class="game-page" id="page-${id}">
-        <div class="game-top">
-          <button class="back-btn" onclick="Engine.backToHall()">← 大厅</button>
-          <h2>${icon} ${name}</h2>
-        </div>
-        <div class="top-bar"><div class="balance-display">💰 <span class="balance-val">0</span></div></div>
-        <div class="game-table">
-          <div id="${ns}Display" style="font-size:3rem;margin:8px 0;">${icon}</div>
-          <div id="${ns}Result" style="font-size:1.5rem;font-weight:bold;min-height:40px;color:var(--gold);">?</div>
-          <div id="${ns}Msg" class="message"></div>
-        </div>
-        <div class="chips">
-          <div class="chip chip-100" onclick="${ns}Bet(100)">100</div>
-          <div class="chip chip-500" onclick="${ns}Bet(500)">500</div>
-          <div class="chip chip-1000" onclick="${ns}Bet(1000)">1000</div>
-        </div>
-        <div class="current-bet">下注：<span id="${ns}Bet">0</span></div>
-        <div class="game-controls">
-          <button class="btn btn-primary" id="${ns}SpinBtn" onclick="${ns}Spin()">转！</button>
-        </div>
-      </div>`);
+    BaseGame.init(id, icon, name, {
+      tableHTML: `
+        <div id="${ns}Display" style="font-size:3rem;margin:8px 0;">${icon}</div>
+        <div id="${ns}Result" style="font-size:1.5rem;font-weight:bold;min-height:40px;color:var(--gold);">?</div>
+        <div id="${ns}Msg" class="message"></div>`,
+      controlsHTML: `
+        <button class="btn btn-primary" id="${ns}SpinBtn" onclick="${ns}Spin()">转！</button>`
     });
 
-    window[`${ns}Bet`] = (amount) => {
-      if (!Engine.canBet(amount)) return;
-      state.bet += amount;
-      Engine.state.balance -= amount; Engine.save(); Engine.updateBalanceUI();
-      document.getElementById(`${ns}Bet`).textContent = state.bet; Engine.play('click');
-    };
+    BaseGame.betHandler(ns, state);
 
     window[`${ns}Spin`] = () => {
       if (state.spinning || state.bet <= 0) return;
@@ -382,21 +299,19 @@ const GameFactory = {
           const msg = document.getElementById(`${ns}Msg`);
           if (mult > 0) {
             const win = Math.floor(state.bet * mult);
-            Engine.addBalance(win);
+            BaseGame.settle(ns, state, true, win);
             msg.textContent = `🎉 中了！赢 ${win} 筹码！`;
             msg.className = 'message msg-win';
-            Engine.play('win');
             if (mult >= 5) Engine.showQuote('jackpot');
             else Engine.showQuote('win');
           } else {
-            msg.textContent = `💀 没中，输 ${state.bet}`;
+            const loseAmount = state.bet;
+            BaseGame.settle(ns, state, false, 0);
+            msg.textContent = `💀 没中，输 ${loseAmount}`;
             msg.className = 'message msg-lose';
-            Engine.play('lose');
           }
-          state.bet = 0; state.spinning = false;
+          state.spinning = false;
           document.getElementById(`${ns}SpinBtn`).disabled = false;
-          document.getElementById(`${ns}Bet`).textContent = '0';
-          Engine.updateBalanceUI();
         }
       }, 80);
     };
@@ -411,27 +326,13 @@ const GameFactory = {
     const EMOJIS = ['🍎','🍊','🍋','🍇','🍒','🍑','🍓','🍌','🥝','🍉','🍍','🥭','🫐','🍈','🍐','🥑',
                      '🐶','🐱','🐰','🐼','🐨','🦊','🐸','🐵','🦁','🐯','🐮','🐷','🐭','🐹','🐻','🐨'];
 
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('gamePages').insertAdjacentHTML('beforeend', `
-      <div class="game-page" id="page-${id}">
-        <div class="game-top">
-          <button class="back-btn" onclick="Engine.backToHall()">← 大厅</button>
-          <h2>${icon} ${name}</h2>
-        </div>
-        <div class="top-bar"><div class="balance-display">💰 <span class="balance-val">0</span></div></div>
-        <div class="game-table">
-          <div style="font-size:0.8rem;color:#888;margin-bottom:6px;">${desc}</div>
-          <div id="${ns}Grid" class="hand" style="gap:6px;max-width:360px;margin:0 auto;"></div>
-          <div id="${ns}Stat" style="font-size:0.8rem;color:#888;">匹配：0/${pairs}</div>
-          <div id="${ns}Result" class="message"></div>
-        </div>
-        <div class="chips">
-          <div class="chip chip-100" onclick="${ns}Bet(100)">100</div>
-          <div class="chip chip-500" onclick="${ns}Bet(500)">500</div>
-          <div class="chip chip-1000" onclick="${ns}Bet(1000)">1000</div>
-        </div>
-        <div class="current-bet">下注：<span id="${ns}Bet">0</span></div>
-      </div>`);
+    BaseGame.init(id, icon, name, {
+      tableHTML: `
+        <div style="font-size:0.8rem;color:#888;margin-bottom:6px;">${desc}</div>
+        <div id="${ns}Grid" class="hand" style="gap:6px;max-width:360px;margin:0 auto;"></div>
+        <div id="${ns}Stat" style="font-size:0.8rem;color:#888;">匹配：0/${pairs}</div>
+        <div id="${ns}Result" class="message"></div>`,
+      controlsHTML: ''
     });
 
     function shuffleCards() {
@@ -452,13 +353,10 @@ const GameFactory = {
       ).join('');
     }
 
-    window[`${ns}Bet`] = (amount) => {
+    const baseBet = BaseGame.betHandler(ns, state);
+    window[`${ns}Bet`] = function(amount) {
       if (state.locked && !state.started) return;
-      if (!Engine.canBet(amount)) return;
-      state.bet += amount;
-      Engine.state.balance -= amount; Engine.save(); Engine.updateBalanceUI();
-      document.getElementById(`${ns}Bet`).textContent = state.bet;
-      Engine.play('click');
+      baseBet(amount);
       if (state.bet > 0 && !state.started) {
         state.started = true;
         state.cards = shuffleCards();
@@ -496,13 +394,10 @@ const GameFactory = {
           Engine.play('win');
           if (state.matched === pairs) {
             const win = Math.floor(state.bet * (1 + pairs * 0.3));
-            Engine.addBalance(win);
+            BaseGame.settle(ns, state, true, win);
             document.getElementById(`${ns}Result`).textContent = `🎉 全部配对！赢 ${win} 筹码！`;
             document.getElementById(`${ns}Result`).className = 'message msg-win';
             Engine.showQuote('win');
-            state.bet = 0;
-            document.getElementById(`${ns}Bet`).textContent = '0';
-            Engine.updateBalanceUI();
           }
         } else {
           setTimeout(() => {
@@ -523,38 +418,20 @@ const GameFactory = {
     const ns = id.replace(/-/g,'_');
     const state = { bet: 0, revealed: false };
 
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('gamePages').insertAdjacentHTML('beforeend', `
-      <div class="game-page" id="page-${id}">
-        <div class="game-top">
-          <button class="back-btn" onclick="Engine.backToHall()">← 大厅</button>
-          <h2>${icon} ${name}</h2>
-        </div>
-        <div class="top-bar"><div class="balance-display">💰 <span class="balance-val">0</span></div></div>
-        <div class="game-table">
-          <div id="${ns}Display" style="font-size:4rem;margin:8px 0;">${icon}</div>
-          <div id="${ns}Reveal" style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:8px 0;"></div>
-          <div id="${ns}Result" class="message">${desc}</div>
-        </div>
-        <div class="chips">
-          <div class="chip chip-100" onclick="${ns}Bet(100)">100</div>
-          <div class="chip chip-500" onclick="${ns}Bet(500)">500</div>
-          <div class="chip chip-1000" onclick="${ns}Bet(1000)">1000</div>
-        </div>
-        <div class="current-bet">下注：<span id="${ns}Bet">0</span></div>
-        <div class="game-controls">
-          <button class="btn btn-primary" id="${ns}DrawBtn" onclick="${ns}Draw()">抽！</button>
-          <button class="btn" onclick="${ns}Reset()">新一局</button>
-        </div>
-      </div>`);
+    BaseGame.init(id, icon, name, {
+      tableHTML: `
+        <div id="${ns}Display" style="font-size:4rem;margin:8px 0;">${icon}</div>
+        <div id="${ns}Reveal" style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:8px 0;"></div>
+        <div id="${ns}Result" class="message">${desc}</div>`,
+      controlsHTML: `
+        <button class="btn btn-primary" id="${ns}DrawBtn" onclick="${ns}Draw()">抽！</button>
+        <button class="btn" onclick="${ns}Reset()">新一局</button>`
     });
 
-    window[`${ns}Bet`] = (amount) => {
+    const baseBet = BaseGame.betHandler(ns, state);
+    window[`${ns}Bet`] = function(amount) {
       if (state.revealed) return;
-      if (!Engine.canBet(amount)) return;
-      state.bet += amount;
-      Engine.state.balance -= amount; Engine.save(); Engine.updateBalanceUI();
-      document.getElementById(`${ns}Bet`).textContent = state.bet; Engine.play('click');
+      baseBet(amount);
     };
 
     window[`${ns}Draw`] = () => {
@@ -575,20 +452,17 @@ const GameFactory = {
           const msg = document.getElementById(`${ns}Result`);
           if (result.mult > 0) {
             const win = Math.floor(state.bet * result.mult);
-            Engine.addBalance(win);
+            BaseGame.settle(ns, state, true, win);
             msg.textContent = `${result.label}！赢 ${win} 筹码！`;
             msg.className = 'message msg-win';
-            Engine.play('win');
             if (result.mult >= 5) Engine.showQuote('jackpot');
             else Engine.showQuote('win');
           } else {
-            msg.textContent = `${result.label}，输 ${state.bet}`;
+            const loseAmount = state.bet;
+            BaseGame.settle(ns, state, false, 0);
+            msg.textContent = `${result.label}，输 ${loseAmount}`;
             msg.className = 'message msg-lose';
-            Engine.play('lose');
           }
-          state.bet = 0;
-          document.getElementById(`${ns}Bet`).textContent = '0';
-          Engine.updateBalanceUI();
         }
       }, 80);
     };
@@ -611,51 +485,25 @@ const GameFactory = {
     const FACES = ['⚀','⚁','⚂','⚃','⚄','⚅'];
     const state = { bet: 0, choice: null, rolling: false };
 
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('gamePages').insertAdjacentHTML('beforeend', `
-      <div class="game-page" id="page-${id}">
-        <div class="game-top">
-          <button class="back-btn" onclick="Engine.backToHall()">← 大厅</button>
-          <h2>${icon} ${name}</h2>
-        </div>
-        <div class="top-bar"><div class="balance-display">💰 <span class="balance-val">0</span></div></div>
-        <div class="game-table">
-          <div class="dice-area" id="${ns}Dice"></div>
-          <div id="${ns}Total" class="message msg-info">${desc}</div>
-          <div id="${ns}Result" class="message"></div>
-        </div>
-        <div class="bet-options" id="${ns}Choices"></div>
-        <div class="chips">
-          <div class="chip chip-100" onclick="${ns}Bet(100)">100</div>
-          <div class="chip chip-500" onclick="${ns}Bet(500)">500</div>
-          <div class="chip chip-1000" onclick="${ns}Bet(1000)">1000</div>
-        </div>
-        <div class="current-bet">下注：<span id="${ns}Bet">0</span></div>
-        <div class="game-controls">
-          <button class="btn btn-primary" id="${ns}RollBtn" onclick="${ns}Roll()">掷骰子！</button>
-        </div>
-      </div>`);
-
-      if (choices) {
-        document.getElementById(`${ns}Choices`).innerHTML = Object.entries(choices).map(([key, val]) =>
-          `<button class="bet-btn" data-choice="${key}" onclick="${ns}Select('${key}')">${val}</button>`
-        ).join('');
-      }
+    BaseGame.init(id, icon, name, {
+      tableHTML: `
+        <div class="dice-area" id="${ns}Dice"></div>
+        <div id="${ns}Total" class="message msg-info">${desc}</div>
+        <div id="${ns}Result" class="message"></div>`,
+      controlsHTML: `
+        <button class="btn btn-primary" id="${ns}RollBtn" onclick="${ns}Roll()">掷骰子！</button>`,
+      betOptionsHTML: choices ? `<div class="bet-options" id="${ns}Choices">${Object.entries(choices).map(([key, val]) =>
+        `<button class="bet-btn" data-choice="${key}" onclick="${ns}Select('${key}')">${val}</button>`
+      ).join('')}</div>` : ''
     });
+
+    BaseGame.betHandler(ns, state);
 
     window[`${ns}Select`] = (choice) => {
       state.choice = choice;
-      document.querySelectorAll(`#page-${id} .bet-btn`).forEach(b => b.classList.remove('selected'));
-      document.querySelector(`#page-${id} [data-choice="${choice}"]`).classList.add('selected');
+      BaseGame.selectOption(id, choice);
       document.getElementById(`${ns}Result`).textContent = '';
       Engine.play('click');
-    };
-
-    window[`${ns}Bet`] = (amount) => {
-      if (!Engine.canBet(amount)) return;
-      state.bet += amount;
-      Engine.state.balance -= amount; Engine.save(); Engine.updateBalanceUI();
-      document.getElementById(`${ns}Bet`).textContent = state.bet; Engine.play('click');
     };
 
     window[`${ns}Roll`] = () => {
@@ -712,22 +560,20 @@ const GameFactory = {
           const res = document.getElementById(`${ns}Result`);
           if (won) {
             const win = state.bet * mult;
-            Engine.addBalance(win);
+            BaseGame.settle(ns, state, true, win);
             res.textContent = `中了！赢 ${win} 筹码！`;
             res.className = 'message msg-win';
-            Engine.play('win');
             Engine.showQuote('win');
           } else {
-            res.textContent = isTriple && diceCount >= 2 ? '围骰！通杀！' : `没中，输 ${state.bet}`;
+            const loseAmount = state.bet;
+            BaseGame.settle(ns, state, false, 0);
+            res.textContent = isTriple && diceCount >= 2 ? '围骰！通杀！' : `没中，输 ${loseAmount}`;
             res.className = 'message msg-lose';
-            Engine.play('lose');
           }
 
-          state.bet = 0; state.choice = null; state.rolling = false;
+          state.choice = null; state.rolling = false;
           document.getElementById(`${ns}RollBtn`).disabled = false;
-          document.getElementById(`${ns}Bet`).textContent = '0';
-          document.querySelectorAll(`#page-${id} .bet-btn`).forEach(b => b.classList.remove('selected'));
-          Engine.updateBalanceUI();
+          BaseGame.clearSelection(id);
         }
       }, 70);
     };
@@ -739,15 +585,12 @@ const GameFactory = {
   generateGames(configs) {
     configs.forEach(cfg => {
       if (cfg.template === 'standalone') {
-        // 独立游戏需要有JS文件，这里只注册
         Engine.registerGame(cfg);
         return;
       }
 
-      // 注册模板游戏
       Engine.registerGame(cfg);
 
-      // 根据模板类型创建游戏逻辑
       switch(cfg.template) {
         case 'guess':
           this.createGuessGame(cfg.id, cfg);

@@ -42,58 +42,29 @@
     return `<div class="card ${cardColor(card)}"><span class="card-value">${v}</span><span class="card-suit">${s}</span></div>`;
   }
 
-  const html = `
-  <div class="game-page" id="page-blackjack">
-    <div class="game-top">
-      <button class="back-btn" onclick="BJ.back()">← 大厅</button>
-      <h2>♠️ 21点</h2>
-    </div>
-    <div class="top-bar">
-      <div class="balance-display">💰 <span class="balance-val">0</span></div>
-    </div>
-    <div class="game-table">
+  BaseGame.init('blackjack', '♠️', '21点', {
+    tableHTML: `
       <div style="font-size:0.75rem;color:#888;margin-bottom:4px;">庄家</div>
       <div class="hand" id="bjDealer"></div>
       <div id="bjDealerScore" style="font-size:0.85rem;color:#aaa;"></div>
       <div style="font-size:0.75rem;color:#888;margin:8px 0 4px;">玩家</div>
       <div class="hand" id="bjPlayer"></div>
       <div id="bjPlayerScore" style="font-size:0.85rem;color:#aaa;"></div>
-      <div id="bjResult" class="message"></div>
-    </div>
-    <div class="chips">
-      <div class="chip chip-100" onclick="BJ.bet(100)">100</div>
-      <div class="chip chip-500" onclick="BJ.bet(500)">500</div>
-      <div class="chip chip-1000" onclick="BJ.bet(1000)">1000</div>
-    </div>
-    <div class="current-bet">下注：<span id="bjBet">0</span></div>
-    <div class="game-controls">
+      <div id="bjResult" class="message"></div>`,
+    controlsHTML: `
       <button class="btn" id="bjDealBtn" onclick="BJ.deal()">发牌</button>
       <button class="btn btn-primary" id="bjHitBtn" onclick="BJ.hit()" disabled>要牌</button>
-      <button class="btn" id="bjStandBtn" onclick="BJ.stand()" disabled>停牌</button>
-    </div>
-  </div>`;
-
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('gamePages').insertAdjacentHTML('beforeend', html);
+      <button class="btn" id="bjStandBtn" onclick="BJ.stand()" disabled>停牌</button>`
   });
 
+  window.blackjackBet = function(amount) {
+    if (state.gameOver && !state.standing) return;
+    if (!Engine.canBet(amount)) return;
+    BaseGame.betHandler('blackjack', state)(amount);
+    document.getElementById('bjDealBtn').disabled = false;
+  };
+
   window.BJ = {
-    back() {
-      Engine.backToHall();
-    },
-
-    bet(amount) {
-      if (state.gameOver && !state.standing) return;
-      if (!Engine.canBet(amount)) return;
-      state.bet += amount;
-      Engine.state.balance -= amount;
-      Engine.save();
-      Engine.updateBalanceUI();
-      document.getElementById('bjBet').textContent = state.bet;
-      document.getElementById('bjDealBtn').disabled = false;
-      Engine.play('click');
-    },
-
     deal() {
       if (state.bet <= 0) return;
       state.deck = newDeck();
@@ -109,7 +80,6 @@
       Engine.play('deal');
       this.render();
 
-      // Check natural blackjack
       if (handValue(state.playerHand) === 21) {
         this.stand();
       }
@@ -132,7 +102,6 @@
       document.getElementById('bjHitBtn').disabled = true;
       document.getElementById('bjStandBtn').disabled = true;
 
-      // Dealer draws
       const draw = () => {
         this.render();
         if (handValue(state.dealerHand) < 17) {
@@ -154,39 +123,33 @@
       const pVal = handValue(state.playerHand);
       const dVal = handValue(state.dealerHand);
       const result = document.getElementById('bjResult');
-      let won = false;
+      const betAmt = state.bet;
 
       if (reason === 'bust') {
-        result.textContent = `爆了！点数 ${pVal}，输 ${state.bet}`;
+        result.textContent = `爆了！点数 ${pVal}，输 ${betAmt}`;
         result.className = 'message msg-lose';
-        Engine.play('lose');
+        BaseGame.settle('blackjack', state, false, 0);
       } else if (dVal > 21) {
-        won = true;
-        result.textContent = `庄家爆了！赢 ${state.bet * 2}`;
+        result.textContent = `庄家爆了！赢 ${betAmt * 2}`;
         result.className = 'message msg-win';
-        Engine.play('win');
         Engine.showQuote('win');
+        BaseGame.settle('blackjack', state, true, betAmt * 2);
       } else if (pVal > dVal) {
-        won = true;
-        result.textContent = `${pVal} > ${dVal}，赢 ${state.bet * 2}`;
+        result.textContent = `${pVal} > ${dVal}，赢 ${betAmt * 2}`;
         result.className = 'message msg-win';
-        Engine.play('win');
         Engine.showQuote('win');
+        BaseGame.settle('blackjack', state, true, betAmt * 2);
       } else if (pVal === dVal) {
-        Engine.addBalance(state.bet);
         result.textContent = `平局 ${pVal}，退回下注`;
         result.className = 'message msg-info';
+        BaseGame.settle('blackjack', state, true, betAmt);
       } else {
-        result.textContent = `${pVal} < ${dVal}，输 ${state.bet}`;
+        result.textContent = `${pVal} < ${dVal}，输 ${betAmt}`;
         result.className = 'message msg-lose';
-        Engine.play('lose');
+        BaseGame.settle('blackjack', state, false, 0);
       }
 
-      if (won) Engine.addBalance(state.bet * 2);
-      state.bet = 0;
-      document.getElementById('bjBet').textContent = '0';
       document.getElementById('bjDealBtn').disabled = false;
-      Engine.updateBalanceUI();
       this.render();
     },
 

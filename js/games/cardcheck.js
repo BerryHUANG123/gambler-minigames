@@ -10,58 +10,27 @@
     solved: false
   };
 
-  const html = `<div class="game-page" id="page-cardcheck">
-    <div class="game-top">
-      <button class="back-btn" onclick="Engine.backToHall()">← 大厅</button>
-      <h2>🃏 验牌</h2>
-    </div>
-    <div class="top-bar">
-      <div class="balance-display">💰 <span class="balance-val">0</span></div>
-    </div>
-    <div class="game-table">
-      <div id="cardsContainer" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:20px 0;"></div>
-      <div id="cardcheckMessage" class="message"></div>
-    </div>
-    <div class="bet-options">
-      <button class="bet-btn" data-choice="all" onclick="CardCheck.select('all')">全对 x2</button>
-      <button class="bet-btn" data-choice="one" onclick="CardCheck.select('one')">猜对一张 x1</button>
-    </div>
-    <div class="chips">
-      <div class="chip chip-100" onclick="CardCheck.bet(100)">100</div>
-      <div class="chip chip-500" onclick="CardCheck.bet(500)">500</div>
-      <div class="chip chip-1000" onclick="CardCheck.bet(1000)">1000</div>
-    </div>
-    <div class="current-bet">下注：<span id="cardcheckBet">0</span></div>
-    <div class="game-controls">
-      <button class="btn btn-primary" id="cardcheckStartBtn" onclick="CardCheck.start()">🃏 开始验牌</button>
-    </div>
-  </div>`;
+  BaseGame.init('cardcheck', '🃏', '验牌', {
+    tableHTML: '<div id="cardsContainer" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:20px 0;"></div><div id="cardcheckMessage" class="message"></div>',
+    betOptionsHTML: '<button class="bet-btn" data-choice="all" onclick="CardCheck.select(\'all\')">全对 x2</button><button class="bet-btn" data-choice="one" onclick="CardCheck.select(\'one\')">猜对一张 x1</button>',
+    controlsHTML: '<button class="btn btn-primary" id="cardcheckStartBtn" onclick="CardCheck.start()">🃏 开始验牌</button>'
+  });
 
-  function init() {
-    Engine.registerPage('cardcheck', html);
-    CardCheck.updateUI();
-  }
-
-  function select(choice) {
-    state.choice = choice;
-    document.querySelectorAll('#page-cardcheck .bet-btn').forEach(b => b.classList.remove('selected'));
-    document.querySelector(`#page-cardcheck [data-choice="${choice}"]`).classList.add('selected');
-    Engine.play('click');
-  }
-
-  function bet(amount) {
+  window.cardcheckBet = function(amount) {
     if (!Engine.canBet(amount)) return;
-    state.bet = amount;
-    Engine.state.balance -= amount;
-    Engine.save();
-    Engine.updateBalanceUI();
+    BaseGame.betHandler('cardcheck', state)(amount);
     state.choice = null;
     state.cards = [];
     state.revealed = [];
     state.solved = false;
     document.querySelectorAll('#page-cardcheck .bet-btn').forEach(b => b.classList.remove('selected'));
     document.getElementById('cardcheckMessage').textContent = '';
-    CardCheck.updateUI();
+  };
+
+  function select(choice) {
+    state.choice = choice;
+    document.querySelectorAll('#page-cardcheck .bet-btn').forEach(b => b.classList.remove('selected'));
+    document.querySelector(`#page-cardcheck [data-choice="${choice}"]`).classList.add('selected');
     Engine.play('click');
   }
 
@@ -71,7 +40,6 @@
       return;
     }
 
-    // Generate 4 cards (2 pairs)
     const used = new Set();
     state.cards = [];
     for (let i = 0; i < 4; i++) {
@@ -98,7 +66,6 @@
     state.revealed[index] = true;
     CardCheck.renderCards();
 
-    // Check if we've revealed all matching pairs
     const revealedCards = state.cards.filter((c, i) => state.revealed[i]);
     const valueCounts = {};
     revealedCards.forEach(c => {
@@ -110,10 +77,8 @@
 
     if (pairsFound === totalPairs) {
       state.solved = true;
-      const total = state.bet * 2;
-      Engine.addBalance(total);
-      Engine.showQuote('win', `🎉 全对！赢 ${total} 筹码！`);
-      Engine.play('win');
+      BaseGame.settle('cardcheck', state, true, state.bet * 2);
+      Engine.showQuote('win', `🎉 全对！赢 ${state.bet * 2} 筹码！`);
       document.getElementById('cardcheckMessage').textContent = `🎉 全对！所有牌对都已找到！`;
     }
 
@@ -148,13 +113,9 @@
 
   const CardCheck = {
     select,
-    bet,
     start,
     clickCard,
     renderCards,
-    updateUI,
-    init
+    updateUI
   };
-
-  init();
 })();

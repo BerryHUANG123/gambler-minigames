@@ -1,5 +1,3 @@
-// ========== 比点数 ⚔️ (War) ==========
-
 (function() {
   let state = { bet: 0, playing: false };
 
@@ -19,49 +17,20 @@
     return `<div class="card ${cls}"><span class="card-value">${v}</span><span class="card-suit">${s}</span></div>`;
   }
 
-  const html = `
-  <div class="game-page" id="page-war">
-    <div class="game-top">
-      <button class="back-btn" onclick="Engine.backToHall()">← 大厅</button>
-      <h2>⚔️ 比点数</h2>
-    </div>
-    <div class="top-bar">
-      <div class="balance-display">💰 <span class="balance-val">0</span></div>
-    </div>
-    <div class="game-table">
+  BaseGame.init('war', '⚔️', '比点数', {
+    tableHTML: `
       <div style="font-size:0.75rem;color:#888;">庄家</div>
       <div class="hand" id="warDealer"></div>
       <div style="font-size:1.5rem;margin:4px 0;">⚔️</div>
       <div style="font-size:0.75rem;color:#888;">玩家</div>
       <div class="hand" id="warPlayer"></div>
-      <div id="warResult" class="message"></div>
-    </div>
-    <div class="chips">
-      <div class="chip chip-100" onclick="War.bet(100)">100</div>
-      <div class="chip chip-500" onclick="War.bet(500)">500</div>
-      <div class="chip chip-1000" onclick="War.bet(1000)">1000</div>
-    </div>
-    <div class="current-bet">下注：<span id="warBet">0</span></div>
-    <div class="game-controls">
-      <button class="btn btn-primary" id="warBtn" onclick="War.play()">翻牌！</button>
-    </div>
-  </div>`;
-
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('gamePages').insertAdjacentHTML('beforeend', html);
+      <div id="warResult" class="message">翻牌比大小，A最大2最小！</div>
+    `,
+    controlsHTML: `<button class="btn btn-primary" id="warBtn" onclick="War.play()">翻牌！</button>`
   });
 
   window.War = {
-    bet(amount) {
-      if (!Engine.canBet(amount)) return;
-      state.bet += amount;
-      Engine.state.balance -= amount;
-      Engine.save();
-      Engine.updateBalanceUI();
-      document.getElementById('warBet').textContent = state.bet;
-      Engine.play('click');
-    },
-
+    bet: BaseGame.betHandler('war', state),
     play() {
       if (state.playing || state.bet <= 0) return;
       state.playing = true;

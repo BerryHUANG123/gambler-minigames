@@ -1,5 +1,3 @@
-// ========== 幸运转盘 🍀 (Lucky Wheel) ==========
-
 (function() {
   let state = { bet: 0, spinning: false };
 
@@ -18,37 +16,9 @@
     { label: '🏆 x10', mult: 10, color: '#c0392b' },
   ];
 
-  const html = `
-  <div class="game-page" id="page-luckywheel">
-    <div class="game-top">
-      <button class="back-btn" onclick="Engine.backToHall()">← 大厅</button>
-      <h2>🍀 幸运转盘</h2>
-    </div>
-    <div class="top-bar">
-      <div class="balance-display">💰 <span class="balance-val">0</span></div>
-    </div>
-    <div class="game-table">
-      <div id="wheelWrap" style="position:relative;width:180px;height:180px;margin:10px auto;">
-        <div id="wheelPointer" style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:1.8rem;z-index:2;">⬇️</div>
-        <canvas id="wheelCanvas" width="180" height="180" style="border-radius:50%;border:4px solid var(--gold);"></canvas>
-      </div>
-      <div id="wheelResult" style="font-size:1.5rem;font-weight:bold;min-height:40px;color:var(--gold);">?</div>
-      <div id="lwResult" class="message"></div>
-    </div>
-    <div class="chips">
-      <div class="chip chip-100" onclick="LuckyWheel.bet(100)">100</div>
-      <div class="chip chip-500" onclick="LuckyWheel.bet(500)">500</div>
-      <div class="chip chip-1000" onclick="LuckyWheel.bet(1000)">1000</div>
-    </div>
-    <div class="current-bet">下注：<span id="lwBet">0</span></div>
-    <div class="game-controls">
-      <button class="btn btn-primary" id="lwSpinBtn" onclick="LuckyWheel.spin()">转！</button>
-    </div>
-  </div>`;
-
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('gamePages').insertAdjacentHTML('beforeend', html);
-    drawWheel();
+  BaseGame.init('luckywheel', '🍀', '幸运转盘', {
+    tableHTML: '<div id="wheelWrap" style="position:relative;width:180px;height:180px;margin:10px auto;"><div id="wheelPointer" style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:1.8rem;z-index:2;">⬇️</div><canvas id="wheelCanvas" width="180" height="180" style="border-radius:50%;border:4px solid var(--gold);"></canvas></div><div id="wheelResult" style="font-size:1.5rem;font-weight:bold;min-height:40px;color:var(--gold);">?</div><div id="lwResult" class="message"></div>',
+    controlsHTML: '<button class="btn btn-primary" id="lwSpinBtn" onclick="LuckyWheel.spin()">转！</button>'
   });
 
   function drawWheel() {
@@ -80,14 +50,10 @@
     });
   }
 
-  window.LuckyWheel = {
-    bet(amount) {
-      if (!Engine.canBet(amount)) return;
-      state.bet += amount;
-      Engine.state.balance -= amount; Engine.save(); Engine.updateBalanceUI();
-      document.getElementById('lwBet').textContent = state.bet; Engine.play('click');
-    },
+  BaseGame.betHandler('lw', state);
+  drawWheel();
 
+  window.LuckyWheel = {
     spin() {
       if (state.spinning || state.bet <= 0) return;
       state.spinning = true;
@@ -115,21 +81,18 @@
 
             if (seg.mult > 0) {
               const win = Math.floor(state.bet * seg.mult);
-              Engine.addBalance(win);
               res.textContent = seg.mult >= 5 ? `🎉🎉 头奖！赢 ${win}！` : `中了！赢 ${win}`;
               res.className = 'message msg-win';
-              Engine.play('win');
               Engine.showQuote(seg.mult >= 5 ? 'jackpot' : 'win');
+              BaseGame.settle('lw', state, true, win);
             } else {
               res.textContent = `💀 没中，输 ${state.bet}`;
               res.className = 'message msg-lose';
-              Engine.play('lose');
+              BaseGame.settle('lw', state, false, 0);
             }
 
-            state.bet = 0; state.spinning = false;
+            state.spinning = false;
             document.getElementById('lwSpinBtn').disabled = false;
-            document.getElementById('lwBet').textContent = '0';
-            Engine.updateBalanceUI();
           }, 500);
         }
       }, 50);

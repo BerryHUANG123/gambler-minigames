@@ -3,8 +3,13 @@
 
   var gameId = 'tictactoe';
   var board, currentPlayer, playerWins, computerWins;
-  var betAmount = 0;
   var gameOver = false;
+  var state = { bet: 0 };
+
+  BaseGame.init('tictactoe', '❌', '井字棋', {
+    tableHTML: '<div id="tictactoe-game"></div>',
+    controlsHTML: ''
+  });
 
   function initBoard() {
     board = ['', '', '', '', '', '', '', '', ''];
@@ -16,7 +21,6 @@
 
   function render() {
     var html = '<div class="game-container tictactoe-container">';
-    html += '<h3>❌ 井字棋</h3>';
     html += '<div class="score-bar"><span>玩家: ' + playerWins + '</span><span>电脑: ' + computerWins + '</span></div>';
     html += '<div class="tictactoe-board">';
     for (var i = 0; i < 9; i++) {
@@ -24,10 +28,8 @@
     }
     html += '</div>';
     html += '<div class="msg-info" id="tictactoe-msg">点击格子下棋</div>';
-    html += '<button class="btn-back" onclick="Engine.backToHall()">返回大厅</button>';
     html += '</div>';
-    var el = document.getElementById('gamePages');
-    if (el) el.insertAdjacentHTML('beforeend', html);
+    document.getElementById('tictactoe-game').innerHTML = html;
 
     document.querySelector('.tictactoe-board').addEventListener('click', function (e) {
       var cell = e.target.closest('.tictactoe-cell');
@@ -45,17 +47,14 @@
       playerWins++;
       gameOver = true;
       if (playerWins >= 2) {
-        Engine.play('win');
+        BaseGame.settle('tictactoe', state, true, state.bet * 2);
         Engine.showQuote('win');
-        Engine.addBalance(betAmount * 2);
         document.getElementById('tictactoe-msg').className = 'msg-win';
-        document.getElementById('tictactoe-msg').textContent = '你赢了！奖金 ' + (betAmount * 2) + ' 已入账！';
+        document.getElementById('tictactoe-msg').textContent = '你赢了！奖金 ' + (state.bet * 2) + ' 已入账！';
       } else {
         document.getElementById('tictactoe-msg').textContent = '你赢了这局！';
         setTimeout(nextRound, 1000);
       }
-      Engine.updateBalanceUI();
-      Engine.save();
       return;
     }
     if (isBoardFull()) {
@@ -84,7 +83,7 @@
       computerWins++;
       gameOver = true;
       if (computerWins >= 2) {
-        Engine.play('lose');
+        BaseGame.settle('tictactoe', state, false, 0);
         Engine.showQuote('lose');
         document.getElementById('tictactoe-msg').className = 'msg-lose';
         document.getElementById('tictactoe-msg').textContent = '电脑赢了！';
@@ -92,8 +91,6 @@
         document.getElementById('tictactoe-msg').textContent = '电脑赢了这局！';
         setTimeout(nextRound, 1000);
       }
-      Engine.updateBalanceUI();
-      Engine.save();
       return;
     }
     if (isBoardFull()) {
@@ -107,7 +104,6 @@
   }
 
   function getBestMove() {
-    // Try to win
     for (var i = 0; i < 9; i++) {
       if (board[i] === '') {
         board[i] = 'O';
@@ -115,7 +111,6 @@
         board[i] = '';
       }
     }
-    // Block player
     for (var j = 0; j < 9; j++) {
       if (board[j] === '') {
         board[j] = 'X';
@@ -156,25 +151,11 @@
     document.getElementById('tictactoe-msg').textContent = '新一局！你先手';
   }
 
-  function startGame(amount) {
-    betAmount = amount;
+  window.tictactoeBet = function(amount) {
     if (!Engine.canBet(amount)) return;
-    Engine.addBalance(-amount);
-    Engine.play('click');
+    BaseGame.betHandler('tictactoe', state)(amount);
     initBoard();
     render();
     document.getElementById('tictactoe-msg').textContent = '你先手，点击格子下棋！';
-    Engine.updateBalanceUI();
-    Engine.save();
-  }
-
-  // Register
-  if (window.GameRegistry) {
-    GameRegistry.register(gameId, {
-      name: '井字棋',
-      icon: '❌',
-      start: startGame,
-      minBet: 10
-    });
-  }
+  };
 })();

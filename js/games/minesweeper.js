@@ -4,8 +4,14 @@
   var gameId = 'minesweeper';
   var ROWS = 8, COLS = 8, MINES = 10;
   var board, revealed, minePositions;
-  var betAmount = 0, timer = 0, revealedCount = 0, gameOver = false, timerInterval = null;
+  var timer = 0, revealedCount = 0, gameOver = false, timerInterval = null;
   var started = false;
+  var state = { bet: 0 };
+
+  BaseGame.init('minesweeper', '💣', '扫雷', {
+    tableHTML: '<div id="minesweeper-game"></div>',
+    controlsHTML: ''
+  });
 
   function initGame() {
     board = [];
@@ -41,7 +47,6 @@
       board[p[0]][p[1]] = -1;
       minePositions.push(p);
     }
-    // Calculate numbers
     for (var mr = 0; mr < ROWS; mr++) {
       for (var mc = 0; mc < COLS; mc++) {
         if (board[mr][mc] === -1) continue;
@@ -59,7 +64,6 @@
 
   function render() {
     var html = '<div class="game-container minesweeper-container">';
-    html += '<h3>💣 扫雷</h3>';
     html += '<div class="mines-info">💣 ' + MINES + '  ⏱ <span id="ms-timer">0</span>s  🟦 <span id="ms-revealed">0</span>/54</div>';
     html += '<div class="minesweeper-board">';
     for (var r = 0; r < ROWS; r++) {
@@ -69,10 +73,8 @@
     }
     html += '</div>';
     html += '<div class="msg-info" id="ms-msg">点击格子开始</div>';
-    html += '<button class="btn-back" onclick="Engine.backToHall()">返回大厅</button>';
     html += '</div>';
-    var el = document.getElementById('gamePages');
-    if (el) el.insertAdjacentHTML('beforeend', html);
+    document.getElementById('minesweeper-game').innerHTML = html;
 
     document.querySelector('.minesweeper-board').addEventListener('click', function (e) {
       var cell = e.target.closest('.ms-cell');
@@ -105,7 +107,7 @@
       gameOver = true;
       clearInterval(timerInterval);
       showAllMines();
-      Engine.play('lose');
+      BaseGame.settle('minesweeper', state, false, 0);
       Engine.showQuote('lose');
       document.getElementById('ms-msg').className = 'msg-lose';
       document.getElementById('ms-msg').textContent = '踩雷了！游戏结束！';
@@ -116,7 +118,6 @@
       cell.textContent = board[r][c];
       cell.classList.add('num-' + board[r][c]);
     } else {
-      // Reveal adjacent
       for (var dr = -1; dr <= 1; dr++) {
         for (var dc = -1; dc <= 1; dc++) {
           if (dr === 0 && dc === 0) continue;
@@ -145,34 +146,18 @@
       gameOver = true;
       clearInterval(timerInterval);
       var bonus = Math.max(1, Math.floor(60 / (timer + 1)));
-      var winAmount = betAmount * bonus;
-      Engine.play('win');
+      var winAmount = state.bet * bonus;
+      BaseGame.settle('minesweeper', state, true, state.bet + winAmount);
       Engine.showQuote('win');
-      Engine.addBalance(betAmount + winAmount);
       document.getElementById('ms-msg').className = 'msg-win';
       document.getElementById('ms-msg').textContent = '🎉 扫雷成功！奖金 ' + winAmount + ' 已入账！（用时' + timer + 's）';
-      Engine.updateBalanceUI();
-      Engine.save();
     }
   }
 
-  function startGame(amount) {
-    betAmount = amount;
+  window.minesweeperBet = function(amount) {
     if (!Engine.canBet(amount)) return;
-    Engine.addBalance(-amount);
-    Engine.play('click');
+    BaseGame.betHandler('minesweeper', state)(amount);
     initGame();
     render();
-    Engine.updateBalanceUI();
-    Engine.save();
-  }
-
-  if (window.GameRegistry) {
-    GameRegistry.register(gameId, {
-      name: '扫雷',
-      icon: '💣',
-      start: startGame,
-      minBet: 10
-    });
-  }
+  };
 })();

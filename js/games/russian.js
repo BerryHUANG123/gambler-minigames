@@ -5,62 +5,34 @@
 
   function resetGun() {
     state.chambers = [false, false, false, false, false, false];
-    state.chambers[Engine.randomInt(0, 5)] = true; // one bullet
+    state.chambers[Engine.randomInt(0, 5)] = true;
     state.current = 0;
   }
 
-  const html = `
-  <div class="game-page" id="page-russian">
-    <div class="game-top">
-      <button class="back-btn" onclick="Engine.backToHall()">← 大厅</button>
-      <h2>💀 俄罗斯轮盘</h2>
-    </div>
-    <div class="top-bar">
-      <div class="balance-display">💰 <span class="balance-val">0</span></div>
-    </div>
-    <div class="game-table">
-      <div id="gunDisplay" style="font-size:4rem;margin:10px 0;">🔫</div>
-      <div id="gunChamber" style="font-size:0.9rem;color:#888;">已扣扳机：0/6</div>
-      <div id="russianResult" class="message">按扣扳机！活下来赢双倍！</div>
-    </div>
-    <div class="chips">
-      <div class="chip chip-100" onclick="Russian.bet(100)">100</div>
-      <div class="chip chip-500" onclick="Russian.bet(500)">500</div>
-      <div class="chip chip-1000" onclick="Russian.bet(1000)">1000</div>
-    </div>
-    <div class="current-bet">下注：<span id="ruBet">0</span></div>
-    <div class="game-controls">
-      <button class="btn btn-primary" id="ruFireBtn" onclick="Russian.fire()">🔫 扣扳机！</button>
-      <button class="btn" id="ruNewBtn" onclick="Russian.newGame()">新一局</button>
-    </div>
-  </div>`;
-
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('gamePages').insertAdjacentHTML('beforeend', html);
+  BaseGame.init('russian', '\uD83D\uDC80', '\u4FC4\u7F57\u65AF\u8F6E\u76D8', {
+    tableHTML: '<div id="gunDisplay" style="font-size:4rem;margin:10px 0;">\uD83D\uDD2B</div><div id="gunChamber" style="font-size:0.9rem;color:#888;">\u5DF2\u6263\u677F\u673A\uFF1A0/6</div><div id="russianResult" class="message">\u6309\u6263\u677F\u673A\uFF01\u6D3B\u4E0B\u6765\u8D62\u53CC\u500D\uFF01</div>',
+    controlsHTML: '<button class="btn btn-primary" id="ruFireBtn" onclick="Russian.fire()">\uD83D\uDD2B \u6263\u677F\u673A\uFF01</button><button class="btn" id="ruNewBtn" onclick="Russian.newGame()">\u65B0\u4E00\u5C40</button>'
   });
 
-  window.Russian = {
-    bet(amount) {
-      if (state.playing) return;
-      if (!Engine.canBet(amount)) return;
-      state.bet += amount;
-      Engine.state.balance -= amount;
-      Engine.save();
-      Engine.updateBalanceUI();
-      document.getElementById('ruBet').textContent = state.bet;
-      Engine.play('click');
-    },
+  BaseGame.betHandler('russian', state);
 
+  const _ruBet = window.russianBet;
+  window.russianBet = function(a) {
+    if (state.playing) return;
+    _ruBet(a);
+  };
+
+  window.Russian = {
     newGame() {
       state.bet = 0;
       state.playing = false;
       resetGun();
-      document.getElementById('ruBet').textContent = '0';
+      document.getElementById('russianBet').textContent = '0';
       document.getElementById('ruFireBtn').disabled = false;
-      document.getElementById('russianResult').textContent = '新的一局！敢扣扳机吗？';
+      document.getElementById('russianResult').textContent = '\u65B0\u7684\u4E00\u5C40\uFF01\u6562\u6263\u677F\u673A\u5417\uFF1F';
       document.getElementById('russianResult').className = 'message msg-info';
-      document.getElementById('gunDisplay').textContent = '🔫';
-      document.getElementById('gunChamber').textContent = '已扣扳机：0/6';
+      document.getElementById('gunDisplay').textContent = '\uD83D\uDD2B';
+      document.getElementById('gunChamber').textContent = '\u5DF2\u6263\u677F\u673A\uFF1A0/6';
       Engine.updateBalanceUI();
     },
 
@@ -79,57 +51,51 @@
         const gun = document.getElementById('gunDisplay');
 
         if (isDead) {
-          gun.textContent = '💥💀';
-          res.textContent = `💥 砰！你死了！输 ${state.bet}`;
+          gun.textContent = '\uD83D\uDCA5\uD83D\uDC80';
+          const lost = state.bet;
+          BaseGame.settle('russian', state, false, 0);
+          res.textContent = '\uD83D\uDCA5 \u7830\uFF01\u4F60\u6B7B\u4E86\uFF01\u8F93 ' + lost;
           res.className = 'message msg-lose';
-          Engine.play('lose');
           Engine.showQuote('taunt');
         } else {
           const survived = state.current;
-          gun.textContent = survived >= 3 ? '😎🔫' : '😰🔫';
-          document.getElementById('gunChamber').textContent = `已扣扳机：${survived}/6`;
+          gun.textContent = survived >= 3 ? '\uD83D\uDE0E\uD83D\uDD2B' : '\uD83D\uDE30\uD83D\uDD2B';
+          document.getElementById('gunChamber').textContent = '\u5DF2\u6263\u677F\u673A\uFF1A' + survived + '/6';
 
           if (survived >= 6) {
             const win = state.bet * 6;
-            Engine.addBalance(win);
-            res.textContent = `🎉 6枪全空！你活下来了！赢 ${win}！赌神保佑！`;
-            res.className = 'message msg-celebrate';
-            Engine.play('win');
+            BaseGame.settle('russian', state, true, win);
             Engine.showQuote('jackpot');
+            res.textContent = '\uD83C\uDF89 6\u67AA\u5168\u7A7A\uFF01\u4F60\u6D3B\u4E0B\u6765\u4E86\uFF01\u8D62 ' + win + '\uFF01\u8D4C\u795E\u4FDD\u4F51\uFF01';
+            res.className = 'message msg-celebrate';
           } else {
             const cashout = Math.floor(state.bet * (1 + survived * 0.5));
-            res.innerHTML = `你活过了 ${survived} 枪！<br>继续扣还是收手？<br>现在收手拿 ${cashout}，继续扣翻倍！`;
+            res.innerHTML = '\u4F60\u6D3B\u8FC7\u4E86 ' + survived + ' \u67AA\uFF01<br>\u7EE7\u7EED\u6263\u8FD8\u662F\u6536\u624B\uFF1F<br>\u73B0\u5728\u6536\u624B\u62FF ' + cashout + '\uFF0C\u7EE7\u7EED\u6263\u7FFB\u500D\uFF01';
             res.className = 'message msg-info';
 
-            // Add cashout option
             const controls = document.querySelector('#page-russian .game-controls');
             if (!document.getElementById('ruCashoutBtn')) {
               const btn = document.createElement('button');
               btn.className = 'btn btn-primary';
               btn.id = 'ruCashoutBtn';
-              btn.textContent = `💰 收手 (拿 ${cashout})`;
-              btn.onclick = () => {
-                Engine.addBalance(cashout);
-                res.textContent = `见好就收！拿走 ${cashout}`;
+              btn.textContent = '\uD83D\uDCB0 \u6536\u624B (\u62FF ' + cashout + ')';
+              btn.onclick = function() {
+                BaseGame.settle('russian', state, true, cashout);
+                res.textContent = '\u89C1\u597D\u5C31\u6536\uFF01\u62FF\u8D70 ' + cashout;
                 res.className = 'message msg-win';
-                Engine.play('win');
                 document.getElementById('ruFireBtn').disabled = true;
                 document.getElementById('ruCashoutBtn').disabled = true;
-                Engine.updateBalanceUI();
               };
               controls.appendChild(btn);
 
-              // Re-enable fire with higher stakes
               const fireBtn = document.getElementById('ruFireBtn');
               fireBtn.disabled = false;
-              fireBtn.textContent = `🔥 继续 (x${survived + 1})`;
+              fireBtn.textContent = '\uD83D\uDD25 \u7EE7\u7EED (x' + (survived + 1) + ')';
               state.playing = false;
               Engine.play('click');
             }
           }
         }
-
-        Engine.updateBalanceUI();
       }, 1000);
     }
   };

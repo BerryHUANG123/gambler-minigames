@@ -1,5 +1,3 @@
-// ========== 猜拳 ✂️ (Rock Paper Scissors) ==========
-
 (function() {
   let state = { bet: 0, playerScore: 0, compScore: 0, round: 0, maxRounds: 3 };
 
@@ -9,16 +7,8 @@
     { id: 'scissors', icon: '✌️', beat: 'paper' },
   ];
 
-  const html = `
-  <div class="game-page" id="page-rps">
-    <div class="game-top">
-      <button class="back-btn" onclick="RPS.back()">← 大厅</button>
-      <h2>✂️ 猜拳</h2>
-    </div>
-    <div class="top-bar">
-      <div class="balance-display">💰 <span class="balance-val">0</span></div>
-    </div>
-    <div class="game-table">
+  BaseGame.init('rps', '✂️', '猜拳', {
+    tableHTML: `
       <div style="display:flex;justify-content:space-around;width:100%;margin-bottom:8px;">
         <div>你：<span id="rpsP"></span></div>
         <div>电脑：<span id="rpsC"></span></div>
@@ -30,34 +20,18 @@
       </div>
       <div id="rpsScore" style="font-size:0.9rem;color:#aaa;">第 1/3 局</div>
       <div id="rpsResult" class="message">三局两胜，先下注！</div>
-    </div>
-    <div class="bet-options">
-      <button class="bet-btn" onclick="RPS.throw('rock')">✊ 石头</button>
-      <button class="bet-btn" onclick="RPS.throw('paper')">✋ 布</button>
-      <button class="bet-btn" onclick="RPS.throw('scissors')">✌️ 剪刀</button>
-    </div>
-    <div class="chips">
-      <div class="chip chip-100" onclick="RPS.bet(100)">100</div>
-      <div class="chip chip-500" onclick="RPS.bet(500)">500</div>
-      <div class="chip chip-1000" onclick="RPS.bet(1000)">1000</div>
-    </div>
-    <div class="current-bet">下注：<span id="rpsBet">0</span></div>
-  </div>`;
-
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('gamePages').insertAdjacentHTML('beforeend', html);
+    `,
+    betOptionsHTML: `
+      <div class="bet-options">
+        <button class="bet-btn" onclick="RPS.throw('rock')">✊ 石头</button>
+        <button class="bet-btn" onclick="RPS.throw('paper')">✋ 布</button>
+        <button class="bet-btn" onclick="RPS.throw('scissors')">✌️ 剪刀</button>
+      </div>
+    `
   });
 
   window.RPS = {
-    back() { Engine.backToHall(); },
-
-    bet(amount) {
-      if (state.round >= state.maxRounds) return;
-      if (!Engine.canBet(amount)) return;
-      state.bet += amount;
-      Engine.state.balance -= amount; Engine.save(); Engine.updateBalanceUI();
-      document.getElementById('rpsBet').textContent = state.bet; Engine.play('click');
-    },
+    bet: BaseGame.betHandler('rps', state),
 
     throw(playerId) {
       if (state.bet <= 0) {
@@ -113,8 +87,6 @@
           state.bet = 0;
           document.getElementById('rpsBet').textContent = '0';
           Engine.updateBalanceUI();
-
-          // Auto-reset after 2 seconds
           setTimeout(() => RPS.reset(), 2000);
         }, 500);
       }

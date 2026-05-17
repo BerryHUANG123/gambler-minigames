@@ -1,5 +1,3 @@
-// ========== 轮盘 🎡 (Roulette) ==========
-
 (function() {
   let state = { bet: 0, choice: null, spinning: false };
 
@@ -19,6 +17,12 @@
     { num: 35, color: 'black' }, { num: 3, color: 'red' }, { num: 26, color: 'black' },
   ];
 
+  BaseGame.init('roulette', '🎡', '轮盘', {
+    tableHTML: '<div id="rtWheelDisplay" style="font-size:3rem;margin:10px 0;">🎡</div><div id="rtNumber" style="font-size:2rem;font-weight:bold;color:var(--gold);min-height:50px;">?</div><div id="rtResult" class="message"></div>',
+    betOptionsHTML: '<div class="bet-options" style="max-width:400px;"><button class="bet-btn" data-choice="red" onclick="Roulette.select(\'red\')">🔴 红</button><button class="bet-btn" data-choice="black" onclick="Roulette.select(\'black\')">⚫ 黑</button><button class="bet-btn" data-choice="even" onclick="Roulette.select(\'even\')">偶</button><button class="bet-btn" data-choice="odd" onclick="Roulette.select(\'odd\')">奇</button><button class="bet-btn" data-choice="low" onclick="Roulette.select(\'low\')">1-18</button><button class="bet-btn" data-choice="high" onclick="Roulette.select(\'high\')">19-36</button><button class="bet-btn bet-btn-danger" data-choice="zero" onclick="Roulette.select(\'zero\')" style="border-color:#e74c3c;color:#e74c3c;">0 (x35)</button></div>',
+    controlsHTML: '<button class="btn btn-primary" id="rtSpinBtn" onclick="Roulette.spin()">转！</button>'
+  });
+
   function getMultiplier(choice, result) {
     const { num, color } = result;
     switch(choice) {
@@ -33,60 +37,13 @@
     }
   }
 
-  const html = `
-  <div class="game-page" id="page-roulette">
-    <div class="game-top">
-      <button class="back-btn" onclick="Engine.backToHall()">← 大厅</button>
-      <h2>🎡 轮盘</h2>
-    </div>
-    <div class="top-bar">
-      <div class="balance-display">💰 <span class="balance-val">0</span></div>
-    </div>
-    <div class="game-table">
-      <div id="rtWheelDisplay" style="font-size:3rem;margin:10px 0;">🎡</div>
-      <div id="rtNumber" style="font-size:2rem;font-weight:bold;color:var(--gold);min-height:50px;">?</div>
-      <div id="rtResult" class="message"></div>
-    </div>
-    <div class="bet-options" style="max-width:400px;">
-      <button class="bet-btn" data-choice="red" onclick="Roulette.select('red')">🔴 红</button>
-      <button class="bet-btn" data-choice="black" onclick="Roulette.select('black')">⚫ 黑</button>
-      <button class="bet-btn" data-choice="even" onclick="Roulette.select('even')">偶</button>
-      <button class="bet-btn" data-choice="odd" onclick="Roulette.select('odd')">奇</button>
-      <button class="bet-btn" data-choice="low" onclick="Roulette.select('low')">1-18</button>
-      <button class="bet-btn" data-choice="high" onclick="Roulette.select('high')">19-36</button>
-      <button class="bet-btn bet-btn-danger" data-choice="zero" onclick="Roulette.select('zero')" style="border-color:#e74c3c;color:#e74c3c;">0 (x35)</button>
-    </div>
-    <div class="chips">
-      <div class="chip chip-100" onclick="Roulette.bet(100)">100</div>
-      <div class="chip chip-500" onclick="Roulette.bet(500)">500</div>
-      <div class="chip chip-1000" onclick="Roulette.bet(1000)">1000</div>
-    </div>
-    <div class="current-bet">下注：<span id="rtBet">0</span></div>
-    <div class="game-controls">
-      <button class="btn btn-primary" id="rtSpinBtn" onclick="Roulette.spin()">转！</button>
-    </div>
-  </div>`;
-
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('gamePages').insertAdjacentHTML('beforeend', html);
-  });
+  BaseGame.betHandler('rt', state);
 
   window.Roulette = {
     select(choice) {
       state.choice = choice;
-      document.querySelectorAll('#page-roulette .bet-btn').forEach(b => b.classList.remove('selected'));
-      document.querySelector(`#page-roulette [data-choice="${choice}"]`).classList.add('selected');
+      BaseGame.selectOption('rt', choice);
       document.getElementById('rtResult').textContent = '';
-      Engine.play('click');
-    },
-
-    bet(amount) {
-      if (!Engine.canBet(amount)) return;
-      state.bet += amount;
-      Engine.state.balance -= amount;
-      Engine.save();
-      Engine.updateBalanceUI();
-      document.getElementById('rtBet').textContent = state.bet;
       Engine.play('click');
     },
 
@@ -113,24 +70,20 @@
           const resEl = document.getElementById('rtResult');
           if (mult > 0) {
             const win = state.bet * mult;
-            Engine.addBalance(win);
             resEl.textContent = `中了！${result.num} ${result.color === 'red' ? '🔴' : result.color === 'black' ? '⚫' : '🟢'}！赢 ${win}`;
             resEl.className = 'message msg-win';
-            Engine.play('win');
             Engine.showQuote('win');
+            BaseGame.settle('rt', state, true, win);
           } else {
             resEl.textContent = `${result.num} 没中，输 ${state.bet}`;
             resEl.className = 'message msg-lose';
-            Engine.play('lose');
+            BaseGame.settle('rt', state, false, 0);
           }
 
-          state.bet = 0;
           state.choice = null;
           state.spinning = false;
           document.getElementById('rtSpinBtn').disabled = false;
-          document.getElementById('rtBet').textContent = '0';
-          document.querySelectorAll('#page-roulette .bet-btn').forEach(b => b.classList.remove('selected'));
-          Engine.updateBalanceUI();
+          BaseGame.clearSelection('rt');
         }
       }, 80);
     }
