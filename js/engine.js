@@ -286,26 +286,13 @@ const Engine = {
     if (!grid) return;
 
     const games = this.getGames(category);
-    let html = '';
-
-    // 热门推荐 section（仅在"全部"视图顶部展示）
-    if (category === 'all') {
-      const hotGames = this._registry.filter(g => g.hot);
-      if (hotGames.length) {
-        html += `<div class="hot-section"><h3 class="hot-title">🔥 热门推荐</h3><div class="hot-grid">`;
-        hotGames.forEach(g => { html += this._gameCardHTML(g); });
-        html += `</div></div><div class="section-divider"></div>`;
-      }
-    }
-
     const page = this._page || 0;
     const perPage = 24;
     const totalPages = Math.ceil(games.length / perPage);
     const start = page * perPage;
     const pageGames = games.slice(start, start + perPage);
 
-    html += pageGames.map(g => this._gameCardHTML(g)).join('');
-    html += this._renderPagination(totalPages, page);
+    const html = pageGames.map(g => this._gameCardHTML(g)).join('') + this._renderPagination(totalPages, page);
 
     grid.innerHTML = html;
     this._currentCategory = category;
