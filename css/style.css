@@ -165,6 +165,14 @@ body {
 .chip-1000 { background: linear-gradient(135deg,#1a1a1a,#444); border-color: var(--gold); color: var(--gold); }
 .chip-100 { border-color: var(--gold); color: var(--gold); }
 
+.chips .clear-bet-btn {
+  background: none; border: 1px solid #e74c3c; color: #e74c3c;
+  padding: 4px 10px; border-radius: 6px; cursor: pointer;
+  font-family: inherit; font-size: 0.7rem; transition: 0.2s;
+  white-space: nowrap;
+}
+.chips .clear-bet-btn:hover { background: #e74c3c; color: white; }
+
 .bet-options {
   display: flex; gap: 8px; margin: 8px 0; flex-wrap: wrap; justify-content: center;
 }

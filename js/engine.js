@@ -102,7 +102,7 @@ const Engine = {
     }
 
     const script = document.createElement('script');
-    script.src = `js/games/${id}.js?v=4`;
+    script.src = `js/games/${id}.js?v=5`;
     script.onload = () => {
       this._loaded.add(id);
       this.showGame(id);

@@ -23,6 +23,7 @@ const BaseGame = {
         <div class="chip chip-100" onclick="${ns}Bet(100)">100</div>
         <div class="chip chip-500" onclick="${ns}Bet(500)">500</div>
         <div class="chip chip-1000" onclick="${ns}Bet(1000)">1000</div>
+        <button class="clear-bet-btn" onclick="${ns}ClearBet()">清零</button>
       </div>
       <div class="current-bet">下注：<span id="${ns}Bet">0</span></div>
       <div class="game-controls">
@@ -50,6 +51,11 @@ const BaseGame = {
       Engine.play('click');
     };
     window[ns + 'Bet'] = fn;
+    window[ns + 'ClearBet'] = function() {
+      state.bet = 0;
+      document.getElementById(ns + 'Bet').textContent = '0';
+      Engine.play('click');
+    };
     return fn;
   },
 

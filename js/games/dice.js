@@ -10,7 +10,7 @@
 
   BaseGame.init('dice', '🎲', '掷骰子', {
     tableHTML: '<div id="diceContainer" style="display:flex;gap:15px;justify-content:center;margin:20px 0;"><div class="die" id="die1">?</div><div class="die" id="die2">?</div><div class="die" id="die3">?</div></div><div id="diceResult" style="font-size:1.3rem;color:var(--gold);min-height:30px;text-align:center;"></div><div id="diceMessage" class="message"></div>',
-    betOptionsHTML: '<button class="bet-btn" data-choice="big" onclick="Dice.select(\'big\')">大 (4-6) x2</button><button class="bet-btn" data-choice="small" onclick="Dice.select(\'small\')">小 (1-3) x2</button>',
+    betOptionsHTML: '<button class="bet-btn" data-choice="big" onclick="Dice.select(\'big\')">大 (11+) x2</button><button class="bet-btn" data-choice="small" onclick="Dice.select(\'small\')">小 (≤10) x2</button>',
     controlsHTML: '<button class="btn btn-primary" id="diceRollBtn" onclick="Dice.roll()">🎲 掷骰子</button>'
   });
 
