@@ -10,6 +10,7 @@ const BaseGame = {
       <div class="game-top">
         <button class="back-btn" onclick="Engine.backToHall()">← 大厅</button>
         <h2>${icon} ${name}</h2>
+        <button class="help-btn" onclick="BaseGame.showHelp('${id}')" title="游戏说明">?</button>
       </div>
       <div class="top-bar">
         <div class="balance-display">💰 <span class="balance-val">0</span></div>
@@ -84,6 +85,22 @@ const BaseGame = {
   // 获取命名空间
   ns(id) {
     return id.replace(/-/g, '_');
+  },
+
+  // 显示游戏说明弹窗
+  showHelp(id) {
+    const config = Engine.getGame(id);
+    if (!config) return;
+    const title = document.getElementById('helpModalTitle');
+    const body = document.getElementById('helpModalBody');
+    if (title) title.textContent = `${config.icon} ${config.name} — 游戏说明`;
+    if (body) body.textContent = config.help || config.desc || '暂无说明';
+    document.getElementById('helpModal')?.classList.add('show');
+  },
+
+  // 隐藏游戏说明弹窗
+  hideHelp() {
+    document.getElementById('helpModal')?.classList.remove('show');
   }
 };
 window.BaseGame = BaseGame;

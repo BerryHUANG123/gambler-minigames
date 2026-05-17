@@ -7,6 +7,9 @@ const GameFactory = {
   /** 猜数字类模板 */
   createGuessGame(id, opts) {
     const { name, icon, min = 1, max = 10, desc, attempts = 5, multiplier = 5 } = opts;
+    opts.help = `系统随机生成一个${min}-${max}之间的数字，你有${attempts}次机会猜中它。` +
+      `每次输入数字后，系统会提示"大了"或"小了"。猜中即可赢得${multiplier}倍奖金！` +
+      `下注后输入数字并点击"猜！"按钮开始。`;
     const ns = id.replace(/-/g,'_');
     const state = { bet: 0, target: 0, guesses: 0, gameOver: false };
 
@@ -84,6 +87,8 @@ const GameFactory = {
   /** 问答/选择题模板 */
   createQuizGame(id, opts) {
     const { name, icon, desc, questions } = opts;
+    opts.help = `一共${questions.length}道选择题，每题有多个选项。选择你认为正确的答案，答完后根据正确率结算奖金。` +
+      `全部答对可获得高额奖励！下注后开始答题。`;
     const ns = id.replace(/-/g,'_');
     const state = { bet: 0, qIdx: 0, score: 0, total: questions.length, answered: false, gameOver: false };
 
@@ -174,6 +179,8 @@ const GameFactory = {
   /** 反应点击类模板 */
   createReactionGame(id, opts) {
     const { name, icon, desc, type = 'click', timeLimit = 10 } = opts;
+    opts.help = `在${timeLimit}秒内尽可能多地点击目标！目标会在游戏区域内随机出现，每次击中得1分。` +
+      `时间到后根据得分结算奖金，得分越高奖励越多！下注后点击"开始！"按钮。`;
     const ns = id.replace(/-/g,'_');
     const state = { bet: 0, score: 0, playing: false, timeLeft: 0, timer: null };
 
@@ -265,6 +272,8 @@ const GameFactory = {
   /** 转盘抽奖类模板 */
   createWheelGame(id, opts) {
     const { name, icon, desc, segments } = opts;
+    opts.help = `点击"转！"按钮旋转转盘，转盘有${segments.length}个区域，指针最终停在哪个区域就获得对应的奖励。` +
+      `不同的区域有不同的赔率，赔率越高越难中！下注后才能转动。`;
     const ns = id.replace(/-/g,'_');
     const state = { bet: 0, spinning: false };
 
@@ -320,6 +329,8 @@ const GameFactory = {
   /** 记忆翻牌类模板 */
   createMemoryGame(id, opts) {
     const { name, icon, desc, pairs = 6 } = opts;
+    opts.help = `翻开卡片，找到所有配对的图案！一共${pairs}对牌，每次翻两张，图案相同则配对成功。` +
+      `全部配对完成后即可赢得奖金。下注后开始翻牌。`;
     const ns = id.replace(/-/g,'_');
     const state = { bet: 0, cards: [], flipped: [], matched: 0, total: pairs, locked: false, started: false };
 
@@ -415,6 +426,8 @@ const GameFactory = {
   /** 简单运气抽奖类模板 */
   createLuckGame(id, opts) {
     const { name, icon, desc, options } = opts;
+    opts.help = `从${options.length}个选项中抽取一个，不同选项对应不同的奖励倍数。` +
+      `点击"抽！"按钮试试你的运气，最高可获得${Math.max(...options.map(o => o.mult || 0))}倍奖励！下注后抽取。`;
     const ns = id.replace(/-/g,'_');
     const state = { bet: 0, revealed: false };
 
@@ -481,6 +494,9 @@ const GameFactory = {
   /** 骰子比大小类模板 */
   createDiceGame(id, opts) {
     const { name, icon, desc, diceCount = 2, choices, multiplier } = opts;
+    opts.help = `掷${diceCount}颗骰子，${desc}` +
+      (choices ? `选择你的下注选项，猜中即可赢得对应倍数的奖金！` : `系统自动判定输赢。`) +
+      `下注后选择选项（如有）并点击"掷骰子！"。`;
     const ns = id.replace(/-/g,'_');
     const FACES = ['⚀','⚁','⚂','⚃','⚄','⚅'];
     const state = { bet: 0, choice: null, rolling: false };

@@ -42,6 +42,20 @@
 
   <div id="quote" class="quote-popup"></div>
 
+  <!-- 游戏说明弹窗 -->
+  <div id="helpModal" class="help-modal-overlay" onclick="BaseGame.hideHelp()">
+    <div class="help-modal" onclick="event.stopPropagation()">
+      <div class="help-modal-header">
+        <span id="helpModalTitle">游戏说明</span>
+        <button class="help-close" onclick="BaseGame.hideHelp()">✕</button>
+      </div>
+      <div id="helpModalBody" class="help-modal-body"></div>
+    </div>
+  </div>
+
+  <!-- 悬浮提示 -->
+  <div id="gameTooltip" class="game-tooltip"></div>
+
   <!-- 大厅 -->
   <div class="hall active" id="hall">
     <header class="header">
@@ -68,7 +82,7 @@
   <!-- 核心引擎 -->
   <script src="js/engine.js"></script>
   <!-- 游戏基类 -->
-  <script src="js/base-game.js?v=2"></script>
+  <script src="js/base-game.js?v=3"></script>
   <!-- 游戏工厂（模板生成器） -->
   <script src="js/game-factory.js"></script>
   <!-- 100个游戏配置 -->

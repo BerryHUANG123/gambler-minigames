@@ -8,7 +8,8 @@ const BASE = `http://localhost:${PORT}`;
 const delay = ms => new Promise(r => setTimeout(r, ms));
 
 const server = createServer((req, res) => {
-  let filePath = join('.', req.url === '/' ? 'index.html' : req.url);
+  const pathname = req.url.split('?')[0];
+  let filePath = join('.', pathname === '/' ? 'index.html' : pathname);
   try { const data = readFileSync(filePath); const ext = extname(filePath); const mime = { '.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.ico': 'image/x-icon' }[ext] || 'application/octet-stream'; res.writeHead(200, { 'Content-Type': mime }); res.end(data); } catch { res.writeHead(404); res.end('Not found'); }
 });
 server.listen(PORT);
@@ -18,10 +19,14 @@ const browser = await puppeteer.launch({
   args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu']
 });
 
-const testIds = ['dice', 'coinflip', 'dice-poker', 'slot'];
+const testIds = ['dice', 'coinflip', 'dice-poker', 'slot', 'dice3', 'guess-number'];
 const page = await browser.newPage();
 
-await page.goto(BASE, { waitUntil: 'load', timeout: 30000 });
+page.on('console', msg => console.log('  [PAGE]', msg.text()));
+page.on('error', err => console.log('  [ERR]', err.message));
+page.on('pageerror', err => console.log('  [PAGE_ERR]', err.message));
+
+await page.goto(BASE, { waitUntil: 'networkidle0', timeout: 30000 });
 await delay(500);
 
 for (const id of testIds) {
@@ -31,7 +36,7 @@ for (const id of testIds) {
 
   const info = await page.evaluate((gid) => {
     const p = document.getElementById(`page-${gid}`);
-    if (!p) return 'NO PAGE FOUND';
+    if (!p) return { error: 'NO PAGE FOUND' };
     const cs = getComputedStyle(p);
     const kids = Array.from(p.children).map(c => {
       const s = getComputedStyle(c);
@@ -41,17 +46,18 @@ for (const id of testIds) {
       pageDisplay: cs.display, pageVis: cs.visibility,
       pageRect: p.getBoundingClientRect(),
       children: kids,
-      innerFirst200: p.innerHTML.substring(0, 200)
+      innerFirst200: p.innerHTML.substring(0, 200),
+      helpBtn: p.querySelector('.help-btn') ? true : false
     };
   }, id);
 
+  if (info.error) { console.log(`  ${info.error}`); continue; }
   console.log(`  Page display: ${info.pageDisplay}, visibility: ${info.pageVis}`);
-  console.log(`  Page rect:`, JSON.stringify(info.pageRect));
   console.log(`  Children (${info.children.length}):`);
   info.children.forEach((c, i) => {
-    console.log(`    [${i}] <${c.tag} class="${c.cls}"> display=${c.disp} vis=${c.vis} rect=${JSON.stringify(c.rect)}`);
+    console.log(`    [${i}] <${c.tag} class="${c.cls}"> display=${c.disp} vis=${c.vis}`);
   });
-  console.log(`  HTML preview: ${info.innerFirst200.substring(0, 100)}...`);
+  console.log(`  Help button: ${info.helpBtn ? '✅' : '❌'}`);
 
   await page.evaluate(() => Engine.backToHall());
   await delay(300);

@@ -94,7 +94,7 @@ const Engine = {
     }
 
     const script = document.createElement('script');
-    script.src = `js/games/${id}.js?v=2`;
+    script.src = `js/games/${id}.js?v=3`;
     script.onload = () => {
       this._loaded.add(id);
       this.showGame(id);
@@ -284,7 +284,7 @@ const Engine = {
     const pageGames = games.slice(start, start + perPage);
 
     grid.innerHTML = pageGames.map(g => `
-      <div class="game-card" data-game="${g.id}" onclick="Engine.loadGame('${g.id}')">
+      <div class="game-card" data-game="${g.id}" onmouseenter="Engine.showTooltip('${g.id}', event)" onmousemove="Engine.moveTooltip(event)" onmouseleave="Engine.hideTooltip()" onclick="Engine.loadGame('${g.id}')">
         <div class="icon">${g.icon}</div>
         <div class="name">${g.name}</div>
         <div class="desc">${g.desc}</div>
@@ -318,6 +318,32 @@ const Engine = {
     this._page = 0;
     this._currentCategory = cat;
     this.renderHall(cat);
+  },
+
+  // ---- 悬浮提示 ----
+  showTooltip(id, event) {
+    const config = this.getGame(id);
+    if (!config) return;
+    const tip = document.getElementById('gameTooltip');
+    if (!tip) return;
+    tip.innerHTML = `<div><span class="tooltip-icon">${config.icon}</span> <span class="tooltip-name">${config.name}</span></div><div class="tooltip-desc">${config.help || config.desc || '暂无说明'}</div>`;
+    tip.classList.add('show');
+    this.moveTooltip(event);
+  },
+
+  moveTooltip(event) {
+    const tip = document.getElementById('gameTooltip');
+    if (!tip) return;
+    let x = event.clientX + 16;
+    let y = event.clientY + 16;
+    if (x + 340 > window.innerWidth) x = event.clientX - 340;
+    if (y + 200 > window.innerHeight) y = event.clientY - 200;
+    tip.style.left = x + 'px';
+    tip.style.top = y + 'px';
+  },
+
+  hideTooltip() {
+    document.getElementById('gameTooltip')?.classList.remove('show');
   },
 };
 
