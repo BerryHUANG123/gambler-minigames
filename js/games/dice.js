@@ -59,7 +59,6 @@
     }
 
     document.getElementById('diceMessage').textContent = `点数：${die1} + ${die2} + ${die3} = ${sum}`;
-    state.choice = null;
   }
 
   const FACES = ['⚀','⚁','⚂','⚃','⚄','⚅'];
