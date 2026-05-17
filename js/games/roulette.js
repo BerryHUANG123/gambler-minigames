@@ -37,12 +37,12 @@
     }
   }
 
-  BaseGame.betHandler('rt', state);
+  BaseGame.betHandler('roulette', state);
 
   window.Roulette = {
     select(choice) {
       state.choice = choice;
-      BaseGame.selectOption('rt', choice);
+      BaseGame.selectOption('roulette', choice);
       document.getElementById('rtResult').textContent = '';
       Engine.play('click');
     },
@@ -73,17 +73,17 @@
             resEl.textContent = `中了！${result.num} ${result.color === 'red' ? '🔴' : result.color === 'black' ? '⚫' : '🟢'}！赢 ${win}`;
             resEl.className = 'message msg-win';
             Engine.showQuote('win');
-            BaseGame.settle('rt', state, true, win);
+            BaseGame.settle('roulette', state, true, win);
           } else {
             resEl.textContent = `${result.num} 没中，输 ${state.bet}`;
             resEl.className = 'message msg-lose';
-            BaseGame.settle('rt', state, false, 0);
+            BaseGame.settle('roulette', state, false, 0);
           }
 
           state.choice = null;
           state.spinning = false;
           document.getElementById('rtSpinBtn').disabled = false;
-          BaseGame.clearSelection('rt');
+          BaseGame.clearSelection('roulette');
         }
       }, 80);
     }

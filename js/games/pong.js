@@ -28,6 +28,6 @@
     end(won){state.playing=false;clearInterval(state.timer);document.removeEventListener('keydown',PO.keyHandler);const res=document.getElementById('poResult');
       if(won){const win=state.bet*2;Engine.addBalance(win);res.textContent=`🎉 ${state.pScore}:${state.cScore}赢了！赢 ${win}！`;res.className='message msg-win';Engine.play('win');Engine.showQuote('win');}
       else{res.textContent=`${state.pScore}:${state.cScore}输了，输${state.bet}`;res.className='message msg-lose';Engine.play('lose');}
-      state.bet=0;document.getElementById('poBet').textContent='0';document.getElementById('poStartBtn').disabled=false;Engine.updateBalanceUI();}
+      state.bet=0;document.getElementById('pongBet').textContent='0';document.getElementById('poStartBtn').disabled=false;Engine.updateBalanceUI();}
   };
 })();

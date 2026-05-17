@@ -14,7 +14,7 @@
     { text: '👑 头奖！', mult: 10 },
   ];
 
-  var _bet = BaseGame.betHandler('sc', state);
+  var _bet = BaseGame.betHandler('scratch', state);
 
   window.scBet = function(amount) {
     if (state.revealed) return;
@@ -55,11 +55,11 @@
         res.textContent = `${prize.text}！赢 ${win} 筹码！`;
         res.className = 'message msg-win';
         Engine.showQuote(prize.mult >= 5 ? 'jackpot' : 'win');
-        BaseGame.settle('sc', state, true, win);
+        BaseGame.settle('scratch', state, true, win);
       } else {
         res.textContent = `${prize.text}，输 ${state.bet}`;
         res.className = 'message msg-lose';
-        BaseGame.settle('sc', state, false, 0);
+        BaseGame.settle('scratch', state, false, 0);
       }
     },
 

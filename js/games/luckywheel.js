@@ -17,8 +17,8 @@
   ];
 
   BaseGame.init('luckywheel', '🍀', '幸运转盘', {
-    tableHTML: '<div id="wheelWrap" style="position:relative;width:180px;height:180px;margin:10px auto;"><div id="wheelPointer" style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:1.8rem;z-index:2;">⬇️</div><canvas id="wheelCanvas" width="180" height="180" style="border-radius:50%;border:4px solid var(--gold);"></canvas></div><div id="wheelResult" style="font-size:1.5rem;font-weight:bold;min-height:40px;color:var(--gold);">?</div><div id="lwResult" class="message"></div>',
-    controlsHTML: '<button class="btn btn-primary" id="lwSpinBtn" onclick="LuckyWheel.spin()">转！</button>'
+    tableHTML: '<div id="wheelWrap" style="position:relative;width:180px;height:180px;margin:10px auto;"><div id="wheelPointer" style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:1.8rem;z-index:2;">⬇️</div><canvas id="wheelCanvas" width="180" height="180" style="border-radius:50%;border:4px solid var(--gold);"></canvas></div><div id="wheelResult" style="font-size:1.5rem;font-weight:bold;min-height:40px;color:var(--gold);">?</div><div id="luckywheelResult" class="message"></div>',
+    controlsHTML: '<button class="btn btn-primary" id="luckywheelSpinBtn" onclick="LuckyWheel.spin()">转！</button>'
   });
 
   function drawWheel() {
@@ -50,14 +50,14 @@
     });
   }
 
-  BaseGame.betHandler('lw', state);
+  BaseGame.betHandler('luckywheel', state);
   drawWheel();
 
   window.LuckyWheel = {
     spin() {
       if (state.spinning || state.bet <= 0) return;
       state.spinning = true;
-      document.getElementById('lwSpinBtn').disabled = true;
+      document.getElementById('luckywheelSpinBtn').disabled = true;
       Engine.play('spin');
 
       const canvas = document.getElementById('wheelCanvas');
@@ -75,7 +75,7 @@
           canvas.style.transform = `rotate(${spinAngle}deg)`;
 
           setTimeout(() => {
-            const res = document.getElementById('lwResult');
+            const res = document.getElementById('luckywheelResult');
             const val = document.getElementById('wheelResult');
             val.textContent = seg.label;
 
@@ -84,15 +84,15 @@
               res.textContent = seg.mult >= 5 ? `🎉🎉 头奖！赢 ${win}！` : `中了！赢 ${win}`;
               res.className = 'message msg-win';
               Engine.showQuote(seg.mult >= 5 ? 'jackpot' : 'win');
-              BaseGame.settle('lw', state, true, win);
+              BaseGame.settle('luckywheel', state, true, win);
             } else {
               res.textContent = `💀 没中，输 ${state.bet}`;
               res.className = 'message msg-lose';
-              BaseGame.settle('lw', state, false, 0);
+              BaseGame.settle('luckywheel', state, false, 0);
             }
 
             state.spinning = false;
-            document.getElementById('lwSpinBtn').disabled = false;
+            document.getElementById('luckywheelSpinBtn').disabled = false;
           }, 500);
         }
       }, 50);

@@ -43,6 +43,6 @@
       const win=Math.floor(state.bet*(1+state.score*0.01));if(state.score>0)Engine.addBalance(win);
       document.getElementById('ttResult').textContent=state.score>0?`🎉 ${state.score}分！赢${win}！`:`游戏结束，输${state.bet}`;
       document.getElementById('ttResult').className=state.score>0?'message msg-win':'message msg-lose';if(state.score>=500)Engine.showQuote('win');
-      state.bet=0;document.getElementById('ttBet').textContent='0';document.getElementById('ttStartBtn').disabled=false;Engine.updateBalanceUI();}
+      state.bet=0;document.getElementById('tetrisBet').textContent='0';document.getElementById('ttStartBtn').disabled=false;Engine.updateBalanceUI();}
   };
 })();

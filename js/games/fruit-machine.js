@@ -7,7 +7,7 @@
     controlsHTML: '<button class="btn btn-primary" id="fmSpinBtn" onclick="FM.spin()">🍎 拉杆！</button>'
   });
 
-  BaseGame.betHandler('fm', state);
+  BaseGame.betHandler('fruit-machine', state);
 
   window.FM={
     spin(){
@@ -19,8 +19,8 @@
         r.forEach((e,i)=>{e.textContent=res[i];e.classList.remove('spinning');});
         const line=res.join(''),mult=PAY[line]||0;
         const el=document.getElementById('fmResult');
-        if(mult>0){const win=state.bet*mult;el.textContent=`🎉 ${line} 中了！赢 ${win}！`;el.className='message msg-win';Engine.showQuote(mult>=8?'jackpot':'win');BaseGame.settle('fm',state,true,win);}
-        else{el.textContent=`${line} 没中`;el.className='message msg-lose';BaseGame.settle('fm',state,false,0);}
+        if(mult>0){const win=state.bet*mult;el.textContent=`🎉 ${line} 中了！赢 ${win}！`;el.className='message msg-win';Engine.showQuote(mult>=8?'jackpot':'win');BaseGame.settle('fruit-machine',state,true,win);}
+        else{el.textContent=`${line} 没中`;el.className='message msg-lose';BaseGame.settle('fruit-machine',state,false,0);}
         state.spinning=false;document.getElementById('fmSpinBtn').disabled=false;
       }},80);
     }

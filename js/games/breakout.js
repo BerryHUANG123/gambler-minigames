@@ -26,6 +26,6 @@
       const res=document.getElementById('brResult');
       if(won){const win=state.bet*3;Engine.addBalance(win);res.textContent=`🎉 全部打碎！得分${state.score}，赢 ${win}！`;res.className='message msg-win';Engine.play('win');Engine.showQuote('win');}
       else{const win=Math.floor(state.bet*(1+state.score*0.02));if(win>state.bet)Engine.addBalance(win);res.textContent=win>state.bet?`得分${state.score}，得${win}`:`游戏结束，输${state.bet}`;res.className=win>state.bet?'message msg-win':'message msg-lose';}
-      state.bet=0;document.getElementById('brBet').textContent='0';document.getElementById('brStartBtn').disabled=false;Engine.updateBalanceUI();}
+      state.bet=0;document.getElementById('breakoutBet').textContent='0';document.getElementById('brStartBtn').disabled=false;Engine.updateBalanceUI();}
   };
 })();

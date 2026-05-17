@@ -6,10 +6,12 @@
     controlsHTML: '<button class="btn btn-primary" id="dodgeStartBtn" onclick="Dodge.start()">开始！</button>'
   });
 
+  BaseGame.betHandler('dodge-bullets', state);
+
   window.dodgeBet = function(amount) {
     if (state.playing) return;
     if (!Engine.canBet(amount)) return;
-    BaseGame.betHandler('dodge', state)(amount);
+    BaseGame.betHandler('dodge-bullets', state)(amount);
   };
 
   window.Dodge = {
@@ -76,11 +78,11 @@
         res.textContent = `🎉 活下来了！躲过 ${state.score} 颗子弹！赢 ${win} 筹码！`;
         res.className = 'message msg-win';
         Engine.showQuote('win');
-        BaseGame.settle('dodge', state, true, win);
+        BaseGame.settle('dodge-bullets', state, true, win);
       } else {
         res.textContent = `💥 被击中了！输 ${state.bet}`;
         res.className = 'message msg-lose';
-        BaseGame.settle('dodge', state, false, 0);
+        BaseGame.settle('dodge-bullets', state, false, 0);
       }
     }
   };
