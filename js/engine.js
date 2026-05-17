@@ -40,6 +40,14 @@ const Engine = {
     this.updateBalanceUI();
   },
 
+  resetBalance(to = 1000) {
+    this.state.balance = to;
+    this.state.totalPlayed = 0;
+    this.state.totalWon = 0;
+    this.save();
+    this.updateBalanceUI();
+  },
+
   canBet(amount) {
     return amount <= this.state.balance;
   },
@@ -94,7 +102,7 @@ const Engine = {
     }
 
     const script = document.createElement('script');
-    script.src = `js/games/${id}.js?v=3`;
+    script.src = `js/games/${id}.js?v=4`;
     script.onload = () => {
       this._loaded.add(id);
       this.showGame(id);

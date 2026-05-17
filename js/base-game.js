@@ -40,15 +40,12 @@ const BaseGame = {
     }
   },
 
-  // 创建标准下注函数（自动注册为全局 window.{ns}Bet）
+  // 创建标准下注函数（仅累加下注额，不扣余额）
   betHandler(ns, state) {
     ns = ns.replace(/-/g, '_');
     const fn = (amount) => {
-      if (!Engine.canBet(amount)) return;
+      if (state.bet + amount > Engine.state.balance) return;
       state.bet += amount;
-      Engine.state.balance -= amount;
-      Engine.save();
-      Engine.updateBalanceUI();
       document.getElementById(`${ns}Bet`).textContent = state.bet;
       Engine.play('click');
     };
@@ -56,15 +53,18 @@ const BaseGame = {
     return fn;
   },
 
-  // 结算（won=true时加筹码，播放音效）
+  // 结算（扣除下注本金 + 派彩）
   settle(ns, state, won, winAmount) {
     ns = ns.replace(/-/g, '_');
+    Engine.state.balance -= state.bet;
     state.bet = 0;
     document.getElementById(`${ns}Bet`).textContent = '0';
     if (won) {
       Engine.addBalance(winAmount);
       Engine.play('win');
     } else {
+      Engine.state.totalPlayed++;
+      Engine.save();
       Engine.play('lose');
     }
     Engine.updateBalanceUI();
