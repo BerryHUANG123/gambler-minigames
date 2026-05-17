@@ -88,3 +88,4 @@ const BaseGame = {
     return id.replace(/-/g, '_');
   }
 };
+window.BaseGame = BaseGame;

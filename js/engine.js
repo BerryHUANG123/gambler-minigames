@@ -136,6 +136,7 @@ const Engine = {
     const page = document.getElementById(`page-${gameId}`);
     if (page) {
       page.classList.add('active');
+      page.scrollIntoView({ behavior: 'smooth', block: 'start' });
       this.updateBalanceUI();
     }
   },
