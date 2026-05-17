@@ -68,6 +68,7 @@ const Engine = {
 
   getGames(category) {
     if (!category || category === 'all') return this._registry;
+    if (category === 'hot') return this._registry.filter(g => g.hot);
     return this._registry.filter(g => g.category === category);
   },
 
@@ -102,7 +103,7 @@ const Engine = {
     }
 
     const script = document.createElement('script');
-    script.src = `js/games/${id}.js?v=7`;
+    script.src = `js/games/${id}.js?v=8`;
     script.onload = () => {
       this._loaded.add(id);
       this.showGame(id);

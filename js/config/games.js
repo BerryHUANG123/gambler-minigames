@@ -4,11 +4,11 @@
 const ALL_GAMES = [
 
   // ==================== 🎲 骰子类 (2个) ====================
-  { id:'dice', icon:'🎲', name:'掷骰子', desc:'押大押小围骰，买定离手！', category:'dice', catName:'骰子', catIcon:'🎲', help:'选择一个选项（大/小/围骰）下注，然后点击"掷骰子！"。两颗骰子点数之和4-6为大，1-3为小，两颗相同为围骰。猜中即可赢得对应倍数的奖金。', file:'js/games/dice.js' },
+  { id:'dice', icon:'🎲', name:'掷骰子', desc:'押大押小围骰，买定离手！', category:'dice', catName:'骰子', catIcon:'🎲', hot:1, help:'选择一个选项（大/小/围骰）下注，然后点击"掷骰子！"。两颗骰子点数之和4-6为大，1-3为小，两颗相同为围骰。猜中即可赢得对应倍数的奖金。', file:'js/games/dice.js' },
   { id:'dice-poker', icon:'🎲', name:'骰子梭哈', desc:'五颗骰子，豹子>顺子>对子，比组合大小！', category:'dice', catName:'骰子', catIcon:'🎲', help:'下注后掷五颗骰子，按骰子组合大小判定输赢。豹子（五颗相同）> 四条 > 葫芦 > 顺子 > 三条 > 两对 > 一对。组合越大，奖金越高。', file:'js/games/dice-poker.js' },
 
   // ==================== ♠️ 扑克/牌类 (6个) ====================
-  { id:'blackjack', icon:'♠️', name:'21点', desc:'经典Blackjack，跟庄家对赌！', category:'card', catName:'扑克牌', catIcon:'♠️', help:'玩家和庄家各发两张牌，玩家可继续要牌（Hit）或停牌（Stand）。目标是使牌面点数尽量接近21但不超过21。比庄家点数大即获胜，黑杰克（A+10点牌）直接获胜。', file:'js/games/blackjack.js' },
+  { id:'blackjack', icon:'♠️', name:'21点', desc:'经典Blackjack，跟庄家对赌！', category:'card', catName:'扑克牌', catIcon:'♠️', hot:1, help:'玩家和庄家各发两张牌，玩家可继续要牌（Hit）或停牌（Stand）。目标是使牌面点数尽量接近21但不超过21。比庄家点数大即获胜，黑杰克（A+10点牌）直接获胜。', file:'js/games/blackjack.js' },
   { id:'cardcheck', icon:'🃏', name:'验牌', desc:'三张牌里找出老千牌，皮克松的绝活！', category:'card', catName:'扑克牌', catIcon:'♠️', help:'皮克松出了三张牌让你检查，其中有一张是老千牌。找出哪张牌被做了手脚即可获胜。仔细看牌的细节！', file:'js/games/cardcheck.js' },
   { id:'war', icon:'⚔️', name:'比点数', desc:'翻牌比大小，A最大2最小！', category:'card', catName:'扑克牌', catIcon:'♠️', help:'你和电脑各发一张牌比大小，A最大2最小。牌面大的一方获胜。下注后点击翻牌！', file:'js/games/war.js' },
   { id:'rps', icon:'✂️', name:'猜拳', desc:'石头剪刀布，三局两胜！', category:'card', catName:'扑克牌', catIcon:'♠️', help:'石头剪刀布，三局两胜制。石头赢剪刀，剪刀赢布，布赢石头。每轮选择你的手势，先赢两局者获胜。', file:'js/games/rps.js' },
@@ -16,26 +16,26 @@ const ALL_GAMES = [
   { id:'baccarat', icon:'🃏', name:'百家乐', desc:'经典百家乐，庄闲对赌！', category:'card', catName:'扑克牌', catIcon:'♠️', help:'押庄家或闲家谁的点数更接近9。也可以押和局。牌面点数：A=1，10/J/Q/K=0，其他按牌面数字。下注后发牌判定输赢。', file:'js/games/baccarat.js' },
 
   // ==================== 🎰 老虎机/转盘类 (3个) ====================
-  { id:'slot', icon:'🎰', name:'老虎机', desc:'777！三列转盘，一拉暴富！', category:'slot', catName:'老虎机', catIcon:'🎰', help:'点击"转！"按钮旋转老虎机转盘。三列转出相同图案即可中奖，不同图案组合对应不同赔率。777是大奖！', file:'js/games/slot.js' },
-  { id:'luckywheel', icon:'🍀', name:'幸运转盘', desc:'转一转，大奖等你拿！', category:'slot', catName:'老虎机', catIcon:'🎰', help:'点击"转！"旋转幸运转盘，转盘上的指针会停在某个区域。每个区域标注了对应的奖励倍数。停中即获得对应倍数的奖金！', file:'js/games/luckywheel.js' },
-  { id:'roulette', icon:'🎡', name:'轮盘', desc:'红黑奇偶任你押！', category:'slot', catName:'老虎机', catIcon:'🎰', help:'经典轮盘游戏。可选择押红/黑、奇/偶、高/低（1-18/19-36）或具体数字。点击轮盘下方的筹码按钮下注，然后点击"转！"旋转轮盘。', file:'js/games/roulette.js' },
+  { id:'slot', icon:'🎰', name:'老虎机', desc:'777！三列转盘，一拉暴富！', category:'slot', catName:'老虎机', catIcon:'🎰', hot:1, help:'点击"转！"按钮旋转老虎机转盘。三列转出相同图案即可中奖，不同图案组合对应不同赔率。777是大奖！', file:'js/games/slot.js' },
+  { id:'luckywheel', icon:'🍀', name:'幸运转盘', desc:'转一转，大奖等你拿！', category:'slot', catName:'老虎机', catIcon:'🎰', hot:1, help:'点击"转！"旋转幸运转盘，转盘上的指针会停在某个区域。每个区域标注了对应的奖励倍数。停中即获得对应倍数的奖金！', file:'js/games/luckywheel.js' },
+  { id:'roulette', icon:'🎡', name:'轮盘', desc:'红黑奇偶任你押！', category:'slot', catName:'老虎机', catIcon:'🎰', hot:1, help:'经典轮盘游戏。可选择押红/黑、奇/偶、高/低（1-18/19-36）或具体数字。点击轮盘下方的筹码按钮下注，然后点击"转！"旋转轮盘。', file:'js/games/roulette.js' },
 
   // ==================== 🎯 反应/技巧类 (6个) ====================
-  { id:'whack-mole', icon:'🔨', name:'打地鼠', desc:'30秒打地鼠！', category:'reaction', catName:'反应', catIcon:'🎯', template:'reaction', type:'mole', timeLimit:30 },
-  { id:'bomb', icon:'💣', name:'拆弹', desc:'三个按钮一个会炸！', category:'reaction', catName:'反应', catIcon:'🎯', help:'三个按钮中选择一个按下，其中一个按钮会"爆炸"。避开炸弹按钮即可赢得筹码。每轮安全递增奖励！', file:'js/games/bomb.js' },
+  { id:'whack-mole', icon:'🔨', name:'打地鼠', desc:'30秒打地鼠！', category:'reaction', catName:'反应', catIcon:'🎯', hot:1, template:'reaction', type:'mole', timeLimit:30 },
+  { id:'bomb', icon:'💣', name:'拆弹', desc:'三个按钮一个会炸！', category:'reaction', catName:'反应', catIcon:'🎯', hot:1, help:'三个按钮中选择一个按下，其中一个按钮会"爆炸"。避开炸弹按钮即可赢得筹码。每轮安全递增奖励！', file:'js/games/bomb.js' },
   { id:'dodge-bullets', icon:'💫', name:'躲子弹', desc:'躲避飞来的子弹！', category:'reaction', catName:'反应', catIcon:'🎯', help:'躲避从各个方向飞来的子弹！用键盘方向键或屏幕按钮移动角色，尽可能长时间存活。每多存活一秒奖励更高。', file:'js/games/dodge.js' },
   { id:'darts', icon:'🎯', name:'飞镖', desc:'射靶心赢大奖！', category:'reaction', catName:'反应', catIcon:'🎯', help:'点击"投掷"按钮射飞镖，瞄准靶心得分。越靠近靶心分数越高，根据总得分结算奖金。', file:'js/games/darts.js' },
-  { id:'minefield', icon:'💣', name:'踩地雷', desc:'6x6格子选路！', category:'reaction', catName:'反应', catIcon:'🎯', help:'在6x6的格子中点击格子，避开地雷。每点开一个安全格获得分数，点到地雷则游戏结束。下注后开始踩格子。', file:'js/games/minefield.js' },
+  { id:'minefield', icon:'💣', name:'踩地雷', desc:'6x6格子选路！', category:'reaction', catName:'反应', catIcon:'🎯', hot:1, help:'在6x6的格子中点击格子，避开地雷。每点开一个安全格获得分数，点到地雷则游戏结束。下注后开始踩格子。', file:'js/games/minefield.js' },
   { id:'rhythm-hero', icon:'🥁', name:'节奏大师', desc:'跟着节奏敲鼓点！', category:'reaction', catName:'反应', catIcon:'🎯', help:'跟随节奏在正确的时机点击鼓点。屏幕上会出现下落音符，当音符到达目标区域时按下对应按键。准确率越高得分越高。', file:'js/games/rhythm-hero.js' },
 
   // ==================== 🧠 记忆类 (3个) ====================
-  { id:'memory-cards', icon:'🃏', name:'记忆翻牌', desc:'6对12张牌配对！', category:'memory', catName:'记忆', catIcon:'🧠', template:'memory', pairs:6 },
+  { id:'memory-cards', icon:'🃏', name:'记忆翻牌', desc:'6对12张牌配对！', category:'memory', catName:'记忆', catIcon:'🧠', hot:1, template:'memory', pairs:6 },
   { id:'memory-numbers', icon:'🔢', name:'数字记忆', desc:'记住数字序列！', category:'memory', catName:'记忆', catIcon:'🧠', help:'屏幕上会显示一串数字，记住它们。数字消失后，按顺序输入你记住的数字。正确数字越多奖金越高。', file:'js/games/memory-numbers.js' },
   { id:'memory-seq', icon:'🔄', name:'顺序记忆', desc:'记住点击顺序！', category:'memory', catName:'记忆', catIcon:'🧠', help:'屏幕上会依次亮起一些图案或位置，记住它们的顺序。然后按照相同的顺序点击它们。序列越来越长，全部正确即可获胜。', file:'js/games/memory-seq.js' },
 
   // ==================== 🧩 益智类 (10个) ====================
   { id:'tictactoe', icon:'❌', name:'井字棋', desc:'和电脑三局两胜！', category:'puzzle', catName:'益智', catIcon:'🧩', help:'和电脑玩井字棋，三局两胜。在3x3的格子中轮流下子，横、竖或斜连成一线即获胜。下注后开始。', file:'js/games/tictactoe.js' },
-  { id:'minesweeper', icon:'💣', name:'扫雷', desc:'经典扫雷8x8！', category:'puzzle', catName:'益智', catIcon:'🧩', help:'经典扫雷游戏8x8。点击格子翻开，数字表示周围地雷数量。标记所有地雷即可获胜。点击到地雷则游戏结束。', file:'js/games/minesweeper.js' },
+  { id:'minesweeper', icon:'💣', name:'扫雷', desc:'经典扫雷8x8！', category:'puzzle', catName:'益智', catIcon:'🧩', hot:1, help:'经典扫雷游戏8x8。点击格子翻开，数字表示周围地雷数量。标记所有地雷即可获胜。点击到地雷则游戏结束。', file:'js/games/minesweeper.js' },
   { id:'game2048', icon:'🔢', name:'2048', desc:'合并冲到2048！', category:'puzzle', catName:'益智', catIcon:'🧩', help:'经典2048游戏。用方向键移动方块，相同数字的方块合并相加。目标是合并出2048这个数字方块。', file:'js/games/game2048.js' },
   { id:'sudoku', icon:'🔢', name:'数独', desc:'4x4小数独填满！', category:'puzzle', catName:'益智', catIcon:'🧩', help:'4x4数独游戏。每行、每列和每个2x2宫格都填入数字1-4，不重复。全部填对即可获胜。', file:'js/games/sudoku.js' },
   { id:'idiom-fill', icon:'📖', name:'成语填空', desc:'填成语考语文功底！', category:'puzzle', catName:'益智', catIcon:'🧩', help:'根据提示补全成语中的空缺字。选择正确的字填入，全部填对即可获胜。', file:'js/games/idiom-fill.js' },
@@ -55,9 +55,9 @@ const ALL_GAMES = [
   { id:'idiom-quiz', icon:'📖', name:'成语猜谜', desc:'看描述猜成语！', category:'quiz', catName:'问答', catIcon:'❓', help:'看描述猜成语。每题给出一个描述，从选项中选择对应的成语。答对题数越多奖金越高。', file:'js/games/idiom-quiz.js' },
 
   // ==================== 🎪 运气类 (4个) ====================
-  { id:'coinflip', icon:'🎪', name:'猜硬币', desc:'正面反面50%胜率！', category:'luck', catName:'运气', catIcon:'🎪', help:'猜硬币正反面，50%胜率。选择正面或反面，系统抛硬币，猜中赢得2倍奖金。', file:'js/games/coinflip.js' },
+  { id:'coinflip', icon:'🎪', name:'猜硬币', desc:'正面反面50%胜率！', category:'luck', catName:'运气', catIcon:'🎪', hot:1, help:'猜硬币正反面，50%胜率。选择正面或反面，系统抛硬币，猜中赢得2倍奖金。', file:'js/games/coinflip.js' },
   { id:'russian', icon:'💀', name:'俄罗斯轮盘', desc:'6发1颗子弹赌命！', category:'luck', catName:'运气', catIcon:'🎪', help:'俄罗斯轮盘！6个弹膛中有1发子弹。每次扣动扳机，活下来赢得筹码，中弹则输掉赌注。每次扣动扳机后弹膛转动。', file:'js/games/russian.js' },
-  { id:'scratch', icon:'💳', name:'刮刮乐', desc:'三张刮刮卡手气！', category:'luck', catName:'运气', catIcon:'🎪', help:'三张刮刮卡，选择一张刮开。刮开后显示奖励金额，直接获得对应筹码。全靠手气！', file:'js/games/scratch.js' },
+  { id:'scratch', icon:'💳', name:'刮刮乐', desc:'三张刮刮卡手气！', category:'luck', catName:'运气', catIcon:'🎪', hot:1, help:'三张刮刮卡，选择一张刮开。刮开后显示奖励金额，直接获得对应筹码。全靠手气！', file:'js/games/scratch.js' },
   { id:'treasure-chest', icon:'📦', name:'开宝箱', desc:'开箱抽奖有宝贝！', category:'luck', catName:'运气', catIcon:'🎪', template:'luck', options:[{label:'💎 钻石 x8',mult:8,icon:'💎'},{label:'💰 金币 x3',mult:3,icon:'💰'},{label:'🍀 幸运币 x2',mult:2,icon:'🍀'},{label:'🪙 铜板 x1.5',mult:1.5,icon:'🪙'},{label:'💩 谢谢',mult:0,icon:'💩'},{label:'🐍 蛇！',mult:0,icon:'🐍'}], desc:'开个宝箱看手气！' },
 
   // ==================== 🏀 体育类 (4个) ====================
@@ -74,8 +74,8 @@ const ALL_GAMES = [
   // ==================== 🎨 创意/休闲类 (7个) ====================
   { id:'link-match', icon:'🔗', name:'连连看', desc:'消除所有方块！', category:'creative', catName:'休闲', catIcon:'🎨', help:'经典连连看游戏！找到两个相同且路径不超过两个拐角的方块，点击它们消除。消除所有方块即可获胜。', file:'js/games/link-match.js' },
   { id:'match3', icon:'💎', name:'三消', desc:'匹配三个消除！', category:'creative', catName:'休闲', catIcon:'🎨', help:'三消游戏！交换相邻的宝石使三个或以上相同宝石连成一线，消除得分。消除越多奖金越高。', file:'js/games/match3.js' },
-  { id:'tetris', icon:'🧱', name:'俄罗斯方块', desc:'经典堆叠消除！', category:'creative', catName:'休闲', catIcon:'🎨', help:'经典俄罗斯方块！用方向键移动和旋转下落的方块，填满整行即可消除得分。堆到顶部则游戏结束。', file:'js/games/tetris.js' },
-  { id:'snake', icon:'🐍', name:'贪吃蛇', desc:'经典别撞墙！', category:'creative', catName:'休闲', catIcon:'🎨', help:'经典贪吃蛇游戏！用方向键控制蛇移动吃食物，每吃一个食物蛇身变长。撞墙或撞到自己则游戏结束。', file:'js/games/snake.js' },
+  { id:'tetris', icon:'🧱', name:'俄罗斯方块', desc:'经典堆叠消除！', category:'creative', catName:'休闲', catIcon:'🎨', hot:1, help:'经典俄罗斯方块！用方向键移动和旋转下落的方块，填满整行即可消除得分。堆到顶部则游戏结束。', file:'js/games/tetris.js' },
+  { id:'snake', icon:'🐍', name:'贪吃蛇', desc:'经典别撞墙！', category:'creative', catName:'休闲', catIcon:'🎨', hot:1, help:'经典贪吃蛇游戏！用方向键控制蛇移动吃食物，每吃一个食物蛇身变长。撞墙或撞到自己则游戏结束。', file:'js/games/snake.js' },
   { id:'breakout', icon:'🧱', name:'打砖块', desc:'打碎所有砖块！', category:'creative', catName:'休闲', catIcon:'🎨', help:'经典打砖块游戏！用挡板接住弹球，反弹打碎上方的砖块。所有砖块打碎即可过关。', file:'js/games/breakout.js' },
   { id:'pong', icon:'🏓', name:'乒乓球', desc:'和电脑对打！', category:'creative', catName:'休闲', catIcon:'🎨', help:'乒乓球游戏！用挡板接住并反弹球，和电脑对打。接不住球则对方得分，先到指定分数获胜。', file:'js/games/pong.js' },
   { id:'hangman', icon:'💀', name:'猜词', desc:'猜成语画完就输！', category:'creative', catName:'休闲', catIcon:'🎨', help:'猜词游戏！根据提示猜一个成语，每次猜一个字。猜错会画一笔，全部画完（上吊小人）则输。猜对成语赢奖金。', file:'js/games/hangman.js' },

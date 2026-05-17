@@ -28,6 +28,7 @@
 
     const categories = Engine.getCategories();
     let html = `<button class="cat-btn cat-active" data-cat="all" onclick="Engine.switchCategory('all')">🏠 全部</button>`;
+    html += `<button class="cat-btn" data-cat="hot" onclick="Engine.switchCategory('hot')">🔥 热门</button>`;
     categories.forEach(c => {
       html += `<button class="cat-btn" data-cat="${c.id}" onclick="Engine.switchCategory('${c.id}')">${c.icon || '📁'} ${c.name}</button>`;
     });
